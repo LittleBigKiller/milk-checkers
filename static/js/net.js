@@ -4,7 +4,6 @@ class Net {
     }
 
     login() {
-        console.error(ui.username)
         $.ajax({
             data: {
                 action: 'LOGIN',
@@ -12,8 +11,11 @@ class Net {
             },
             type: 'POST',
             success: function (data) {
-                console.warn(data)
-                ui.updateHeader(data)
+                data = JSON.parse(data)
+                let header = data.header
+                let playerId = data.id
+                ui.updateHeader(header)
+                game.setupCamera(playerId)
             },
             error: function (xhr, status, error) {
                 console.log(error)

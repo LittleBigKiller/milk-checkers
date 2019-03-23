@@ -76,17 +76,18 @@ function postResponse(req, res) {
                 res.end(JSON.stringify(resData))
             })
         } else if (reqData.action == 'LOGIN') {
-            if (activeUsers.length == 2)
-                res.end('GAME_FULL')
-            else if (activeUsers.includes(reqData.username)) {
-                console.log(activeUsers)
-                console.log(reqData.username)
-                console.log('NAME_TAKEN')
-                res.end('NAME_TAKEN')
+            let resData = {id: -1}
+            if (activeUsers.length == 2) {
+                resData.header = 'GAME_FULL'
+            } else if (activeUsers.includes(reqData.username)) {
+                resData.header = 'NAME_TAKEN'
             } else {
+                resData.id = activeUsers.length
                 activeUsers.push(reqData.username)
-                res.end('USER_ADDED')
+                resData.header = 'USER_ADDED'
             }
+            console.log(resData)
+            res.end(JSON.stringify(resData))
         } else if (reqData.action == 'DBG_FLUSHTABLE') {
             console.log('DBG_FLUSHTABLE')
             activeUsers = []
