@@ -16,6 +16,7 @@ class Net {
                 let playerId = data.id
                 ui.updateHeader(header)
                 game.setupCamera(playerId)
+                game.spawnPawns()
             },
             error: function (xhr, status, error) {
                 console.log(error)

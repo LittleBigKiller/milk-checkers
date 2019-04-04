@@ -25,6 +25,9 @@ class Game {
         this.board
         this.scene
 
+        this.boardTexture
+        this.pawnTexture
+
         this.draw()
     }
 
@@ -38,7 +41,7 @@ class Game {
         var camera = new THREE.PerspectiveCamera(45, winWidth/winHeight, 0.1, 10000)
         this.camera = camera
         
-        var renderer = new THREE.WebGLRenderer()
+        var renderer = new THREE.WebGLRenderer({ antialias: true })
         renderer.setClearColor(0xAAAAAA)
         renderer.setSize(winWidth, winHeight)
 
@@ -57,14 +60,18 @@ class Game {
 
         var axes = new THREE.AxesHelper(1000)
         scene.add(axes)
+        
+        this.boardTexture = new THREE.TextureLoader().load('textures/wood1.png')
+        this.pawnTexture = new THREE.TextureLoader().load('textures/wood1.png')
 
         let board = this.createLevel()
         this.board = board
         scene.add(board)
-
-        let pawns = this.createPawns()
-        scene.add(pawns)
         
+        let tempLight = new THREE.PointLight( 0xffffff, 1, 100 )
+        tempLight.position.set( 50, 50, 50 )
+        scene.add(tempLight)
+
         function render() {
             requestAnimationFrame(render)
                     
@@ -89,6 +96,7 @@ class Game {
         for (let i in this.boardData) {
             for (let j in this.boardData[i]) {
                 var mat = new THREE.MeshBasicMaterial({
+                    map: this.boardTexture,
                     color: 0xdd8833,
                     wireframe: false
                 })
@@ -114,13 +122,14 @@ class Game {
         for (let i in this.boardData) {
             for (let j in this.boardData[i]) {
                 let mat = new THREE.MeshBasicMaterial({
-                    color: 0x00ff00,
+                    map: this.pawnTexture,
+                    color: 0xff0000,
                     wireframe: false
                 })
                 if (this.pawnData[i][j] == 2) {
-                    mat.color.setHex(0x222222)
+                    mat.color.setHex(0xdd2222)
                 } else if (this.pawnData[i][j] == 1) {
-                    mat.color.setHex(0xdddddd)
+                    mat.color.setHex(0x22dddd)
                 } else {
                     continue
                 }
@@ -134,6 +143,11 @@ class Game {
             }
         }
         return container
+    }
+
+    spawnPawns() {
+        let pawns = this.createPawns()
+        this.scene.add(pawns)
     }
 
     setupCamera(playerId) {

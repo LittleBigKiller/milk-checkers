@@ -31,13 +31,19 @@ function getResponse(req, res) {
         })
     } else if (req.url.indexOf('.js') != -1) {
         fs.readFile(__dirname + '/static/' + decodeURI(req.url), function (error, data) {
-            res.writeHead(200, { 'Content-type': 'aplication/javascript; charset=utf-8' })
+            res.writeHead(200, { 'Content-type': 'text/javascript; charset=utf-8' })
             res.write(data)
             res.end()
         })
     } else if (req.url.indexOf('.css') != -1) {
         fs.readFile(__dirname + '/static/' + decodeURI(req.url), function (error, data) {
             res.writeHead(200, { 'Content-type': 'text/css; charset=utf-8' })
+            res.write(data)
+            res.end()
+        })
+    } else if (req.url.indexOf('.png') != -1) {
+        fs.readFile(__dirname + '/static/' + decodeURI(req.url), function (error, data) {
+            res.writeHead(200, { 'Content-type': 'image/png; charset=utf-8' })
             res.write(data)
             res.end()
         })
