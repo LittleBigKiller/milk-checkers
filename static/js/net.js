@@ -16,7 +16,7 @@ class Net {
                 let playerId = data.id
                 ui.updateHeader(header)
                 game.setupCamera(playerId)
-                game.spawnPawns()
+
             },
             error: function (xhr, status, error) {
                 console.log(error)
@@ -33,6 +33,24 @@ class Net {
             type: 'POST',
             success: function (data) {
                 console.log(data)
+            },
+            error: function (xhr, status, error) {
+                console.log(error)
+                console.log(xhr)
+            },
+        })
+    }
+
+    awaitChallenge() {
+        console.log('awaitChallenge')
+        $.ajax({
+            data: {
+                action: 'WAIT-FOR-CHALLENGE',
+            },
+            type: 'POST',
+            success: function (data) {
+                console.log(data)
+                ui.resolveChallenge(data)
             },
             error: function (xhr, status, error) {
                 console.log(error)

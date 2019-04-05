@@ -10,6 +10,7 @@
     <script src="/libs/three.js"></script>
     <script src="/libs/grid.js"></script>
     <script src="/libs/OrbitControls.js"></script>
+    <script src="/js/pawn.js"></script>
     <script src="/js/game.js"></script>
     <script src="/js/net.js"></script>
     <script src="/js/ui.js"></script>
@@ -23,7 +24,7 @@
         <div id="header">
             header
         </div>
-        <div id="login-container">
+        <div id="lock-container">
             <div id="login-dialog">
                 <div id="login-dialog-header">
                     PODAJ NAZWĘ UŻYTKOWNIKA
@@ -35,6 +36,12 @@
                 <button id="login-dialog-reset">
                     RESET TABELI
                 </button>
+            </div>
+            <div id="await-dialog" style="display: none">
+                <div id="await-dialog-header">
+                    CZEKAM NA DRUGIEGO GRACZA
+                </div>
+                <img id="await-dialog-spinner" src="img/logo.png">
             </div>
         </div>
     </div>

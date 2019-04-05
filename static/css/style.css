@@ -59,8 +59,8 @@ button:active {
 #header b {
     font-weight: 900;
     color: #dddddd;
-}
-#login-container {
+} 
+#lock-container {
     display: flex;
     height: calc(100vh - 200px);
     background-color: #33333388;
@@ -108,5 +108,39 @@ button:active {
     height: 80px;
     width: 300px;
     font-size: 3em;
+}
+
+#await-dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    justify-content: center;
+    border: 2px solid #88dd33;
+    width: 600px;
+    height: 450px;
+    border-radius: 50px;
+}
+#await-dialog-header {
+    font-size: 4em;
+    color: #88dd33;
+    text-align: center;
+    line-height: 60px;
+}
+#await-dialog-spinner {
+    display: block;
+    margin: 50px 0;
+    width: 150px;
+    height: 150px;
+    
+    animation-name: await-dialog-spinner;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+}
+
+@keyframes await-dialog-spinner {
+    0% {transform: rotate(0deg);}
+    50% {transform: rotate(180deg);}
+    100% {transform: rotate(360deg);}
 }
 

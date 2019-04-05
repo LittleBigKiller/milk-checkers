@@ -29,6 +29,10 @@ class Game {
         this.pawnTexture
 
         this.draw()
+
+        this.selectedPawn = null
+        this.PID = null
+        this.pawns
     }
 
     draw() {
@@ -72,6 +76,47 @@ class Game {
         tempLight.position.set( 50, 50, 50 )
         scene.add(tempLight)
 
+        $("#root").on('click', function (e) {
+            console.log('REEEE')
+            var raycaster = new THREE.Raycaster()
+            var mouseVector = new THREE.Vector2()
+    
+            mouseVector.x = (e.clientX / $(window).width()) * 2 - 1
+            mouseVector.y = -(e.clientY / $(window).height()) * 2 + 1
+            raycaster.setFromCamera(mouseVector, camera)
+            var inter = raycaster.intersectObjects(scene.children, true)
+    
+            if (inter.length > 0) {
+                let obj = inter[0].object
+                console.log(game.PID)
+                console.log(obj.name)
+
+                if (obj.name == 'PawnRed' && game.PID == 1) {
+                    if (obj.highlighted) {
+                        obj.lowlight()
+                        this.selectedPawn = null
+                    } else {
+                        obj.highlight()
+                        this.selectedPawn = obj
+                    }
+                } else if (obj.name == 'PawnBlack' && game.PID == 0) {
+                    if (obj.highlighted) {
+                        obj.lowlight()
+                        this.selectedPawn = null
+                    } else {
+                        obj.highlight()
+                        this.selectedPawn = obj
+                    }
+                } else if (obj.name == 'Board') {
+                    console.log(obj)
+                    if (this.selectedPawn != null) {
+                        this.selectedPawn.position.z = obj.position.z
+                        this.selectedPawn.position.x = obj.position.x
+                    }
+                }
+            }
+        })
+
         function render() {
             requestAnimationFrame(render)
                     
@@ -95,6 +140,7 @@ class Game {
 
         for (let i in this.boardData) {
             for (let j in this.boardData[i]) {
+                let name
                 var mat = new THREE.MeshBasicMaterial({
                     map: this.boardTexture,
                     color: 0xdd8833,
@@ -102,6 +148,7 @@ class Game {
                 })
                 if (this.boardData[i][j] == 0) {
                     mat.color.setHex(0x111111)
+                    name = 'Board'
                 } else {
                     mat.color.setHex(0xeeeeee)
                 }
@@ -109,6 +156,7 @@ class Game {
                 mesh.position.x = -175 + (50 * i)
                 mesh.position.z = 175 + (-50 * j)
                 mesh.position.y += 5
+                mesh.name = name
                 container.add(mesh)
             }
         }
@@ -116,42 +164,47 @@ class Game {
     }
 
     createPawns() {
+
         var container = new THREE.Object3D()
-        let geo = new THREE.CylinderGeometry(20, 20, 10, 32)
+        /* let geo = new THREE.CylinderGeometry(20, 20, 10, 32) */
 
         for (let i in this.boardData) {
             for (let j in this.boardData[i]) {
-                let mat = new THREE.MeshBasicMaterial({
-                    map: this.pawnTexture,
-                    color: 0xff0000,
-                    wireframe: false
-                })
+                let color
                 if (this.pawnData[i][j] == 2) {
-                    mat.color.setHex(0xdd2222)
+                    color = 0xdd2222
+                    name = "PawnRed"
                 } else if (this.pawnData[i][j] == 1) {
-                    mat.color.setHex(0x22dddd)
+                    color = 0x22dddd
+                    name = "PawnBlack"
                 } else {
                     continue
                 }
-                let mesh = new THREE.Mesh(geo, mat)
 
-                mesh.position.y += 15
-                
-                mesh.position.x = -175 + (50 * i)
-                mesh.position.z = 175 + (-50 * j)
-                container.add(mesh)
+                let mesh = new Pawn(color)
+
+                if (mesh != null) {
+                    mesh.position.y += 15
+                    
+                    mesh.position.x = -175 + (50 * i)
+                    mesh.position.z = 175 + (-50 * j)
+                    mesh.name = name
+                    container.add(mesh)
+                }
             }
         }
         return container
     }
 
     spawnPawns() {
-        let pawns = this.createPawns()
-        this.scene.add(pawns)
+        this.pawns = this.createPawns()
+        this.scene.add(this.pawns)
     }
 
     setupCamera(playerId) {
         console.log('pId: ' + playerId)
+        this.PID = playerId
+        console.log('pId: ' + this.PID)
         if (playerId == 0) {
             console.log('0')
             this.camera.position.set(500, 500, 0)
@@ -165,6 +218,7 @@ class Game {
             this.camera.position.set(0, 500, -500)
             this.camera.lookAt(this.board.position)
         }
+        this.spawnPawns()
     }
 }
 

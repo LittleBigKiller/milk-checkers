@@ -2,6 +2,7 @@ class Ui {
     constructor() {
         this.username = ''
         this.clicks()
+        this.challengeInterval
     }
 
     clicks() {
@@ -22,7 +23,7 @@ class Ui {
         switch(res) {
             case 'USER_ADDED':
                 $('#header').html(res + '<br>Witaj <b>' + ui.username + '</b>!')
-                $('#login-container').css('display', 'none')
+                this.awaitChallenge()
             break
             case 'NAME_TAKEN':
                 $('#header').html(res + '<br>Nazwa <b>' + ui.username + '</b> jest zajęta')
@@ -33,6 +34,19 @@ class Ui {
             default:
                 $('#header').html(res + '<br>Co? ¯\\_(ツ)_/¯')
             break
+        }
+    }
+
+    awaitChallenge() {
+        $('#login-dialog').css('display', 'none')
+        $('#await-dialog').removeAttr('style')
+        this.challengeInterval = setInterval(net.awaitChallenge, 500)
+    }
+
+    resolveChallenge(numOfPlayers) {
+        if (parseInt(numOfPlayers) == 2) {
+            $('#lock-container').css('display', 'none')
+            clearInterval(this.challengeInterval)
         }
     }
 

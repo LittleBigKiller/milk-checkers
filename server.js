@@ -98,6 +98,9 @@ function postResponse(req, res) {
             console.log('DBG_FLUSHTABLE')
             activeUsers = []
             res.end('DBG: Table flushed')
+        } else if (reqData.action == 'WAIT-FOR-CHALLENGE') {
+            console.log('WAIT-FOR-CHALLENGE')
+            res.end('' + activeUsers.length)
         } else {
             console.error('Invalid request')
         }
