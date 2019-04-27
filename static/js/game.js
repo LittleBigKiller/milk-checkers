@@ -38,13 +38,13 @@ class Game {
     draw() {
         var scene = new THREE.Scene()
         this.scene = scene
-        
+
         var winWidth = $(window).width()
         var winHeight = $(window).height()
-        
-        var camera = new THREE.PerspectiveCamera(45, winWidth/winHeight, 0.1, 10000)
+
+        var camera = new THREE.PerspectiveCamera(45, winWidth / winHeight, 0.1, 10000)
         this.camera = camera
-        
+
         var renderer = new THREE.WebGLRenderer({ antialias: true })
         renderer.setClearColor(0xAAAAAA)
         renderer.setSize(winWidth, winHeight)
@@ -64,54 +64,64 @@ class Game {
 
         var axes = new THREE.AxesHelper(1000)
         scene.add(axes)
-        
+
         this.boardTexture = new THREE.TextureLoader().load('textures/wood1.png')
         this.pawnTexture = new THREE.TextureLoader().load('textures/wood1.png')
 
         let board = this.createLevel()
         this.board = board
         scene.add(board)
-        
-        let tempLight = new THREE.PointLight( 0xffffff, 1, 100 )
-        tempLight.position.set( 50, 50, 50 )
+
+        let tempLight = new THREE.PointLight(0xffffff, 1, 100)
+        tempLight.position.set(50, 50, 50)
         scene.add(tempLight)
 
         $("#root").on('click', function (e) {
-            console.log('REEEE')
             var raycaster = new THREE.Raycaster()
             var mouseVector = new THREE.Vector2()
-    
+
             mouseVector.x = (e.clientX / $(window).width()) * 2 - 1
             mouseVector.y = -(e.clientY / $(window).height()) * 2 + 1
             raycaster.setFromCamera(mouseVector, camera)
             var inter = raycaster.intersectObjects(scene.children, true)
-    
+
             if (inter.length > 0) {
                 let obj = inter[0].object
-                console.log(game.PID)
-                console.log(obj.name)
 
                 if (obj.name == 'PawnRed' && game.PID == 1) {
                     if (obj.highlighted) {
                         obj.lowlight()
-                        this.selectedPawn = null
+                        game.selectedPawn = null
                     } else {
                         obj.highlight()
-                        this.selectedPawn = obj
+                        game.selectedPawn = obj
                     }
                 } else if (obj.name == 'PawnBlack' && game.PID == 0) {
                     if (obj.highlighted) {
                         obj.lowlight()
-                        this.selectedPawn = null
+                        game.selectedPawn = null
                     } else {
                         obj.highlight()
-                        this.selectedPawn = obj
+                        game.selectedPawn = obj
                     }
                 } else if (obj.name == 'Board') {
-                    console.log(obj)
-                    if (this.selectedPawn != null) {
-                        this.selectedPawn.position.z = obj.position.z
-                        this.selectedPawn.position.x = obj.position.x
+                    if (game.selectedPawn != null) {
+                        let targetX = (obj.position.x + 175) / 50
+                        let targetZ = (obj.position.z - 175) / -50
+                        let pawnX = (game.selectedPawn.position.x + 175) / 50
+                        let pawnZ = (game.selectedPawn.position.z - 175) / -50
+                        
+                        if (game.pawnData[targetX][targetZ] == 0) {
+                            game.selectedPawn.position.z = obj.position.z
+                            game.selectedPawn.position.x = obj.position.x
+
+                            game.pawnData[pawnX][pawnZ] = 0
+
+                            if (game.PID == 1)
+                                game.pawnData[targetX][targetZ] = 2
+                            else if (game.PID == 0)
+                                game.pawnData[targetX][targetZ] = 1
+                        }
                     }
                 }
             }
@@ -119,18 +129,18 @@ class Game {
 
         function render() {
             requestAnimationFrame(render)
-                    
+
             renderer.render(scene, camera)
         }
-        
-        $(window).resize(function() {
+
+        $(window).resize(function () {
             winWidth = $(window).width()
             winHeight = $(window).height()
-            camera.aspect = winWidth/winHeight
+            camera.aspect = winWidth / winHeight
             camera.updateProjectionMatrix()
             renderer.setSize(winWidth, winHeight)
         })
-        
+
         render()
     }
 
@@ -185,7 +195,7 @@ class Game {
 
                 if (mesh != null) {
                     mesh.position.y += 15
-                    
+
                     mesh.position.x = -175 + (50 * i)
                     mesh.position.z = 175 + (-50 * j)
                     mesh.name = name
