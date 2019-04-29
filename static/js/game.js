@@ -88,7 +88,12 @@ class Game {
             if (inter.length > 0) {
                 let obj = inter[0].object
 
-                if (obj.name == 'PawnRed' && game.PID == 1) {
+                if (obj.name == 'PawnRed' && game.PID == 0) {
+                    for (let i in game.pawns.children) {
+                        if (game.pawns.children[i] != obj)
+                            game.pawns.children[i].lowlight()
+                    }
+
                     if (obj.highlighted) {
                         obj.lowlight()
                         game.selectedPawn = null
@@ -96,7 +101,12 @@ class Game {
                         obj.highlight()
                         game.selectedPawn = obj
                     }
-                } else if (obj.name == 'PawnBlack' && game.PID == 0) {
+                } else if (obj.name == 'PawnBlack' && game.PID == 1) {
+                    for (let i in game.pawns.children) {
+                        if (game.pawns.children[i] != obj)
+                            game.pawns.children[i].lowlight()
+                    }
+
                     if (obj.highlighted) {
                         obj.lowlight()
                         game.selectedPawn = null
@@ -110,7 +120,7 @@ class Game {
                         let targetZ = (obj.position.z - 175) / -50
                         let pawnX = (game.selectedPawn.position.x + 175) / 50
                         let pawnZ = (game.selectedPawn.position.z - 175) / -50
-                        
+
                         if (game.pawnData[targetX][targetZ] == 0) {
                             game.selectedPawn.position.z = obj.position.z
                             game.selectedPawn.position.x = obj.position.x
@@ -121,6 +131,9 @@ class Game {
                                 game.pawnData[targetX][targetZ] = 2
                             else if (game.PID == 0)
                                 game.pawnData[targetX][targetZ] = 1
+
+                            game.selectedPawn.lowlight()
+                            game.selectedPawn = null
                         }
                     }
                 }
@@ -217,11 +230,11 @@ class Game {
         console.log('pId: ' + this.PID)
         if (playerId == 0) {
             console.log('0')
-            this.camera.position.set(500, 500, 0)
+            this.camera.position.set(-500, 500, 0)
             this.camera.lookAt(this.board.position)
         } else if (playerId == 1) {
             console.log('1')
-            this.camera.position.set(-500, 500, 0)
+            this.camera.position.set(500, 500, 0)
             this.camera.lookAt(this.board.position)
         } else {
             console.log('lmao')
