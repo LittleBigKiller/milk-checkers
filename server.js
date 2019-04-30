@@ -4,21 +4,48 @@ var fs = require('fs')
 var PORT = 5500
 
 var activeUsers = []
+var pawnTable = [
+    [2, 0, 2, 0, 2, 0, 2, 0],
+    [0, 2, 0, 2, 0, 2, 0, 2],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0],
+    [1, 0, 1, 0, 1, 0, 1, 0],
+    [0, 1, 0, 1, 0, 1, 0, 1],
+]
 
-var server = http.createServer(function(req,res){
+function array_compare(a1, a2) {
+    if (a1.length != a2.length) {
+        return false;
+    }
+    for (var i in a1) {
+        if (a1[i] instanceof Array && a2[i] instanceof Array) {
+            if (!array_compare(a1[i], a2[i])) {
+                return false;
+            }
+        }
+        else if (a1[i] != a2[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+var server = http.createServer(function (req, res) {
     console.log(req.method + ' ' + req.url)
     switch (req.method) {
         case 'GET':
             getResponse(req, res)
             break
         case 'POST':
-            res.writeHead(200,{'content-type':'text/html; charset=utf-8'})
+            res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' })
             postResponse(req, res)
             break
-    } 
+    }
 })
 
-server.listen(PORT, function(){
+server.listen(PORT, function () {
     console.log('serwer startuje na porcie ' + PORT)
 })
 
@@ -70,7 +97,7 @@ function postResponse(req, res) {
             resData.albumNames = albumNames
             resData.albumId = 0
 
-            fs.readdir(__dirname + '/static/mp3/' + albumNames[0], function(err, trackNames) {
+            fs.readdir(__dirname + '/static/mp3/' + albumNames[0], function (err, trackNames) {
                 if (err) return console.error(err)
 
                 resData.trackNames = trackNames
@@ -82,7 +109,7 @@ function postResponse(req, res) {
                 res.end(JSON.stringify(resData))
             })
         } else if (reqData.action == 'LOGIN') {
-            let resData = {id: -1}
+            let resData = { id: -1 }
             if (activeUsers.length == 2) {
                 resData.header = 'GAME_FULL'
             } else if (activeUsers.includes(reqData.username)) {
@@ -94,15 +121,41 @@ function postResponse(req, res) {
             }
             console.log(resData)
             res.end(JSON.stringify(resData))
+
         } else if (reqData.action == 'DBG_FLUSHTABLE') {
             console.log('DBG_FLUSHTABLE')
             activeUsers = []
+            pawnTable = [
+                [2, 0, 2, 0, 2, 0, 2, 0],
+                [0, 2, 0, 2, 0, 2, 0, 2],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 0, 1, 0, 1, 0, 1, 0],
+                [0, 1, 0, 1, 0, 1, 0, 1],
+            ]
             res.end('DBG: Table flushed')
+
         } else if (reqData.action == 'WAIT-FOR-CHALLENGE') {
             console.log('WAIT-FOR-CHALLENGE')
             res.end('' + activeUsers.length)
+
+        } else if (reqData.action == 'CHECK-TABLE-STATE') {
+            console.log('CHECK-TABLE-STATE')
+            res.end(JSON.stringify(pawnTable))
+
+        } else if (reqData.action == 'PUSH-MOVE') {
+            console.log('PUSH-MOVE')
+            let table = JSON.parse(reqData.table)
+            if (!array_compare(table, pawnTable)) {
+                pawnTable = table
+            }
+            console.log(pawnTable)
+            res.end('Move Accepted')
+
         } else {
-            console.error('Invalid request')
+            console.error('Invalid request -- ' + reqData.action)
         }
     })
 }
