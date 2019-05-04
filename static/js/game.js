@@ -20,6 +20,16 @@ class Game {
             [1, 0, 1, 0, 1, 0, 1, 0],
             [0, 1, 0, 1, 0, 1, 0, 1],
         ]
+        this.moveData = [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+        ]
 
         this.camera
         this.board
@@ -34,12 +44,15 @@ class Game {
         this.PID = null
         this.pawns
 
+        this.myPawns = 8
+        this.enemyPawns = 8
+
         this.myTurn = false
         this.turnCheck = setInterval(() => {
             if (!game.myTurn) {
                 net.checkTableState()
             }
-        }, 500)
+        }, 100)
     }
 
     draw() {
@@ -75,9 +88,7 @@ class Game {
         this.boardTexture = new THREE.TextureLoader().load('textures/wood1.png')
         this.pawnTexture = new THREE.TextureLoader().load('textures/wood1.png')
 
-        let board = this.createLevel()
-        this.board = board
-        scene.add(board)
+        this.spawnLevel()
 
         let tempLight = new THREE.PointLight(0xffffff, 1, 100)
         tempLight.position.set(50, 50, 50)
@@ -128,29 +139,30 @@ class Game {
                         let pawnX = (game.selectedPawn.position.x + 175) / 50
                         let pawnZ = (game.selectedPawn.position.z - 175) / -50
 
-                        if (game.pawnData[targetX][targetZ] == 0) {
-                            if (Math.abs(targetX - pawnX) == 1 && Math.abs(targetZ - pawnZ) == 1) {
-                                game.selectedPawn.position.z = obj.position.z
-                                game.selectedPawn.position.x = obj.position.x
+                        game.selectedPawn.position.z = obj.position.z
+                        game.selectedPawn.position.x = obj.position.x
 
-                                game.pawnData[pawnX][pawnZ] = 0
+                        game.pawnData[pawnX][pawnZ] = 0
 
-                                if (game.PID == 1)
-                                    game.pawnData[targetX][targetZ] = 1
-                                else if (game.PID == 0)
-                                    game.pawnData[targetX][targetZ] = 2
+                        if (game.PID == 1)
+                            game.pawnData[targetX][targetZ] = 1
+                        else if (game.PID == 0)
+                            game.pawnData[targetX][targetZ] = 2
 
-                                game.selectedPawn.lowlight()
-                                game.selectedPawn = null
+                        game.selectedPawn.lowlight()
+                        game.selectedPawn = null
 
-                                game.myTurn = false
-                                net.pushMove(game.pawnData)
-                            } else {
-
-                            }
+                        if (Math.abs(targetZ - pawnZ) == 2) {
+                            game.pawnData[pawnX + parseInt(targetX - pawnX) / 2][pawnZ + parseInt(targetZ - pawnZ) / 2] = 0
                         }
+                        game.myTurn = false
+
+                        game.spawnPawns()
+                        net.pushMove(game.pawnData)
                     }
                 }
+
+                game.createMoveTable()
             }
         })
 
@@ -184,10 +196,17 @@ class Game {
                     wireframe: false
                 })
                 if (this.boardData[i][j] == 0) {
-                    mat.color.setHex(0x111111)
-                    name = 'Board'
+                    if (this.moveData[i][j] == 1) {
+                        mat.color.setHex(0x33dd88)
+                        name = 'Board'
+                    } else if (this.moveData[i][j] == 2) {
+                        mat.color.setHex(0xdd3333)
+                        name = 'Board'
+                    } else {
+                        mat.color.setHex(0x333333)
+                    }
                 } else {
-                    mat.color.setHex(0xeeeeee)
+                    mat.color.setHex(0xdddddd)
                 }
                 var mesh = new THREE.Mesh(geo, mat)
                 mesh.position.x = -175 + (50 * i)
@@ -207,10 +226,10 @@ class Game {
             for (let j in this.boardData[i]) {
                 let color
                 if (this.pawnData[i][j] == 2) {
-                    color = 0xdd2222
+                    color = 0xdd3333
                     name = "PawnRed"
                 } else if (this.pawnData[i][j] == 1) {
-                    color = 0x22dddd
+                    color = 0x33dddd
                     name = "PawnBlack"
                 } else {
                     continue
@@ -232,47 +251,160 @@ class Game {
     }
 
     spawnPawns() {
-        this.pawns = this.createPawns()
-        this.scene.add(this.pawns)
+        game.scene.remove(game.pawns)
+        game.pawns = game.createPawns()
+        game.scene.add(game.pawns)
+    }
+
+    spawnLevel() {
+        this.scene.remove(this.board)
+        this.board = this.createLevel()
+        this.scene.add(this.board)
     }
 
     setupCamera(playerId) {
-        console.log('pId: ' + playerId)
         this.PID = playerId
-        console.log('pId: ' + this.PID)
         if (playerId == 0) {
-            console.log('0')
             this.camera.position.set(-500, 500, 0)
             this.camera.lookAt(this.board.position)
 
             game.myTurn = true
 
+            game.pawnData = [
+                [2, 0, 2, 0, 2, 0, 2, 0],
+                [0, 2, 0, 2, 0, 2, 0, 2],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 0, 1, 0, 1, 0, 1, 0],
+                [0, 1, 0, 1, 0, 1, 0, 1],
+            ]
         } else if (playerId == 1) {
-            console.log('1')
             this.camera.position.set(500, 500, 0)
             this.camera.lookAt(this.board.position)
 
             game.myTurn = false
+
+            game.pawnData = [
+                [2, 0, 2, 0, 2, 0, 2, 0],
+                [0, 2, 0, 2, 0, 2, 0, 2],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 0, 1, 0, 1, 0, 1, 0],
+                [0, 1, 0, 1, 0, 1, 0, 1],
+            ]
         } else {
-            console.log('lmao')
             this.camera.position.set(0, 500, -500)
             this.camera.lookAt(this.board.position)
 
+            game.myTurn = false
+
+            game.pawnData = [
+                [2, 0, 2, 0, 2, 0, 2, 0],
+                [0, 2, 0, 2, 0, 2, 0, 2],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [1, 0, 1, 0, 1, 0, 1, 0],
+                [0, 1, 0, 1, 0, 1, 0, 1],
+            ]
         }
         this.spawnPawns()
     }
 
     resolveTableState(table) {
         if (!game.array_compare(table, game.pawnData)) {
-            console.warn('MY TURN')
-            game.myTurn = true
+            let localMyPawns = 0
+            let localEnemyPawns = 0
+
+            for (let i in table) {
+                for (let j in table[i]) {
+                    if (table[i][j] == 1) {
+                        if (game.PID == 1) localMyPawns++
+                        else if (game.PID == 0) localenemyPawns++
+                    } else if (table[i][j] == 2) {
+                        if (game.PID == 0) localMyPawns++
+                        else if (game.PID == 1) localenemyPawns++
+                    }
+                }
+            }
+
+            if (!game.myTurn) {
+                if (game.myPawns == localMyPawns) {
+                    game.myTurn = true
+                } else {
+                    game.myTurn = false
+                    game.myPawns = localMyPawns
+                }
+            } else {
+                if (game.enemyPawns == localenemyPawns) {
+                    game.myTurn = false
+                    game.enemyPawns = localenemyPawns
+                } else {
+                    game.myTurn = true
+                }
+            }
 
             game.pawnData = table
 
-            game.scene.remove(game.pawns)
-            game.pawns = game.createPawns()
-            game.scene.add(game.pawns)
+            game.spawnPawns()
         }
+    }
+
+    createMoveTable() {
+        if (game.selectedPawn == null || !game.myTurn) {
+            console.warn('game.selectedPawn == null')
+            game.moveData = [
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0, 0],
+            ]
+        } else {
+            let x = (game.selectedPawn.position.x + 175) / 50
+            let z = (game.selectedPawn.position.z - 175) / -50
+
+            if (game.PID == 0) {
+                if (game.pawnData[x + 1][z - 1] == 0)
+                    game.moveData[x + 1][z - 1] = 1
+                else if (game.pawnData[x + 1][z - 1] == 1 && game.pawnData[x + 2][z - 2] == 0) {
+                    game.moveData[x + 1][z - 1] = 2
+                    game.moveData[x + 2][z - 2] = 1
+                }
+
+                if (game.pawnData[x + 1][z + 1] == 0)
+                    game.moveData[x + 1][z + 1] = 1
+                else if (game.pawnData[x + 1][z + 1] == 1 && game.pawnData[x + 2][z + 2] == 0) {
+                    game.moveData[x + 1][z + 1] = 2
+                    game.moveData[x + 2][z + 2] = 1
+                }
+
+            } else if (game.PID == 1) {
+                if (game.pawnData[x - 1][z - 1] == 0)
+                    game.moveData[x - 1][z - 1] = 1
+                else if (game.pawnData[x - 1][z - 1] == 2 && game.pawnData[x - 2][z - 2] == 0) {
+                    game.moveData[x - 1][z - 1] = 2
+                    game.moveData[x - 2][z - 2] = 1
+                }
+
+                if (game.pawnData[x - 1][z + 1] == 0)
+                    game.moveData[x - 1][z + 1] = 1
+                else if (game.pawnData[x - 1][z + 1] == 2 && game.pawnData[x - 2][z + 2] == 0) {
+                    game.moveData[x - 1][z + 1] = 2
+                    game.moveData[x - 2][z + 2] = 1
+                }
+            }
+        }
+
+        game.spawnLevel()
     }
 
     array_compare(a1, a2) {

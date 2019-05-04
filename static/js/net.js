@@ -41,14 +41,14 @@ class Net {
     }
 
     awaitChallenge() {
-        console.log('awaitChallenge')
+        /* console.log('awaitChallenge') */
         $.ajax({
             data: {
                 action: 'WAIT-FOR-CHALLENGE',
             },
             type: 'POST',
             success: function (data) {
-                console.log(data)
+                /* console.log(data) */
                 ui.resolveChallenge(data)
             },
             error: function (xhr, status, error) {
@@ -59,14 +59,14 @@ class Net {
     }
 
     checkTableState() {
-        console.log('checkTableState')
+        /* console.log('checkTableState') */
         $.ajax({
             data: {
                 action: 'CHECK-TABLE-STATE',
             },
             type: 'POST',
             success: function (data) {
-                console.log(JSON.parse(data))
+                /* console.log(JSON.parse(data)) */
                 game.resolveTableState(JSON.parse(data))
             },
             error: function (xhr, status, error) {
@@ -77,7 +77,7 @@ class Net {
     }
 
     pushMove(gameTable) {
-        console.log('pushMove')
+        /* console.log('pushMove') */
         $.ajax({
             data: {
                 action: 'PUSH-MOVE',
@@ -85,7 +85,7 @@ class Net {
             },
             type: 'POST',
             success: function (data) {
-                console.log(data)
+                /* console.log(data) */
             },
             error: function (xhr, status, error) {
                 console.log(error)

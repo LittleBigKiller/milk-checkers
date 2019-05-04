@@ -13,10 +13,12 @@ class Ui {
     loginHandler() {
         ui.username = $('#login-dialog-input').val()
         net.login()
+        net.checkTableState()
     }
 
     resetHandler() {
         net.flushUserTable()
+        net.checkTableState()
     }
 
     updateHeader(res) {
@@ -32,7 +34,7 @@ class Ui {
                 $('#header').html(res + '<br>W grze jest już dwóch graczy')
             break
             default:
-                $('#header').html(res + '<br>Co? ¯\\_(ツ)_/¯')
+                $('#header').html(res + '<br>¯\\_(ツ)_/¯')
             break
         }
     }

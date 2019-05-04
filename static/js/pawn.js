@@ -12,12 +12,10 @@ class Pawn extends THREE.Mesh {
 
         this.savedColor = color
         this.highlighted = false
-
-        console.log(this)
     }
 
     highlight() {
-        this.material.color.setHex(0xffff00)
+        this.material.color.setHex(0xdddd33)
         this.highlighted = true
     }
 

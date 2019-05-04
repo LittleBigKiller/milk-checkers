@@ -118,6 +118,16 @@ function postResponse(req, res) {
                 resData.id = activeUsers.length
                 activeUsers.push(reqData.username)
                 resData.header = 'USER_ADDED'
+                pawnTable = [
+                    [2, 0, 2, 0, 2, 0, 2, 0],
+                    [0, 2, 0, 2, 0, 2, 0, 2],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0],
+                    [1, 0, 1, 0, 1, 0, 1, 0],
+                    [0, 1, 0, 1, 0, 1, 0, 1],
+                ]
             }
             console.log(resData)
             res.end(JSON.stringify(resData))
