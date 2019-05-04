@@ -44,15 +44,21 @@ class Game {
         this.PID = null
         this.pawns
 
-        this.myPawns = 8
+        /* this.myPawns = 8
         this.enemyPawns = 8
 
         this.myTurn = false
         this.turnCheck = setInterval(() => {
-            if (!game.myTurn) {
-                net.checkTableState()
-            }
-        }, 100)
+            console.warn('----------')
+            console.warn(game.myTurn)
+            console.log(game.myPawns)
+            console.log(localMyPawns)
+            console.log(game.enemyPawns)
+            console.log(localEnemyPawns)
+            console.warn('----------')
+
+            net.checkTableState()
+        }, 1000) */
     }
 
     draw() {
@@ -106,6 +112,12 @@ class Game {
             if (inter.length > 0) {
                 let obj = inter[0].object
 
+                console.warn('----------')
+                console.warn(game.myTurn)
+                console.log(game.myPawns)
+                console.log(game.enemyPawns)
+                console.warn('----------')
+
                 if (obj.name == 'PawnRed' && game.PID == 0 && game.myTurn) {
                     for (let i in game.pawns.children) {
                         if (game.pawns.children[i] != obj)
@@ -152,10 +164,14 @@ class Game {
                         game.selectedPawn.lowlight()
                         game.selectedPawn = null
 
+                        game.preserveMove = false
+                        game.myTurn = false
+
                         if (Math.abs(targetZ - pawnZ) == 2) {
                             game.pawnData[pawnX + parseInt(targetX - pawnX) / 2][pawnZ + parseInt(targetZ - pawnZ) / 2] = 0
+                            game.preserveMove = true
+                            game.myTurn = true
                         }
-                        game.myTurn = false
 
                         game.spawnPawns()
                         net.pushMove(game.pawnData)
@@ -181,6 +197,15 @@ class Game {
         })
 
         render()
+    }
+
+    init() {
+        game.myPawns = 8
+        game.enemyPawns = 8
+
+        game.turnCheck = setInterval(() => {
+            net.checkTableState()
+        }, 1000)
     }
 
     createLevel() {
@@ -318,38 +343,52 @@ class Game {
 
     resolveTableState(table) {
         if (!game.array_compare(table, game.pawnData)) {
-            let localMyPawns = 0
-            let localEnemyPawns = 0
+            game.pawnData = table
 
-            for (let i in table) {
-                for (let j in table[i]) {
-                    if (table[i][j] == 1) {
-                        if (game.PID == 1) localMyPawns++
-                        else if (game.PID == 0) localenemyPawns++
-                    } else if (table[i][j] == 2) {
-                        if (game.PID == 0) localMyPawns++
-                        else if (game.PID == 1) localenemyPawns++
+            if (!game.preserveMove) {
+                let localMyPawns = 0
+                let localEnemyPawns = 0
+
+                for (let i in game.pawnData) {
+                    for (let j in game.pawnData[i]) {
+                        if (game.pawnData[i][j] == 1) {
+                            if (game.PID == 1) localMyPawns++
+                            else if (game.PID == 0) localEnemyPawns++
+                        } else if (game.pawnData[i][j] == 2) {
+                            if (game.PID == 0) localMyPawns++
+                            else if (game.PID == 1) localEnemyPawns++
+                        }
                     }
                 }
-            }
 
-            if (!game.myTurn) {
-                if (game.myPawns == localMyPawns) {
-                    game.myTurn = true
+                console.warn('----------')
+                console.warn(game.myTurn)
+                console.log(game.myPawns)
+                console.log(localMyPawns)
+                console.log(game.enemyPawns)
+                console.log(localEnemyPawns)
+
+                if (!game.myTurn) {
+                    if (game.myPawns == localMyPawns) {
+                        game.myTurn = true
+                    } else {
+                        game.myTurn = false
+                        game.myPawns = localMyPawns
+                    }
                 } else {
-                    game.myTurn = false
-                    game.myPawns = localMyPawns
+                    if (game.enemyPawns == localEnemyPawns) {
+                        game.myTurn = false
+                        game.enemyPawns = localEnemyPawns
+                    } else {
+                        game.myTurn = true
+                    }
                 }
+
+                console.error(game.myTurn)
+                console.warn('----------')
             } else {
-                if (game.enemyPawns == localenemyPawns) {
-                    game.myTurn = false
-                    game.enemyPawns = localenemyPawns
-                } else {
-                    game.myTurn = true
-                }
+                game.myTurn = true
             }
-
-            game.pawnData = table
 
             game.spawnPawns()
         }

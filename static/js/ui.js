@@ -49,6 +49,8 @@ class Ui {
         if (parseInt(numOfPlayers) == 2) {
             $('#lock-container').css('display', 'none')
             clearInterval(this.challengeInterval)
+
+            game.init()
         }
     }
 
