@@ -14,6 +14,7 @@ var pawnTable = [
     [1, 0, 1, 0, 1, 0, 1, 0],
     [0, 1, 0, 1, 0, 1, 0, 1],
 ]
+var winner = -1
 
 function array_compare(a1, a2) {
     if (a1.length != a2.length) {
@@ -31,6 +32,31 @@ function array_compare(a1, a2) {
     }
     return true;
 }
+
+function findWinner() {
+    let p0Pawns = 0
+    let p1Pawns = 0
+
+    for (let i in pawnTable) {
+        for (let j in pawnTable[i]) {
+            if (pawnTable[i][j] == 1) {
+                p1Pawns += 1
+            } else if (pawnTable[i][j] == 2) {
+                p0Pawns += 1
+            }
+        }
+    }
+
+    if (p0Pawns == 0) {
+        winner = 1
+    } else if (p1Pawns == 0) {
+        winner = 0
+    } else {
+        winner = -1
+    }
+}
+
+
 
 var server = http.createServer(function (req, res) {
     console.log(req.method + ' ' + req.url)
@@ -145,11 +171,16 @@ function postResponse(req, res) {
                 [1, 0, 1, 0, 1, 0, 1, 0],
                 [0, 1, 0, 1, 0, 1, 0, 1],
             ]
+            winner = -1
             res.end('DBG: Table flushed')
 
         } else if (reqData.action == 'WAIT-FOR-CHALLENGE') {
             console.log('WAIT-FOR-CHALLENGE')
             res.end('' + activeUsers.length)
+
+        } else if (reqData.action == 'CHECK-WIN') {
+            console.log('CHECK-WIN')
+            res.end(JSON.stringify(winner))
 
         } else if (reqData.action == 'CHECK-TABLE-STATE') {
             console.log('CHECK-TABLE-STATE')
@@ -158,10 +189,11 @@ function postResponse(req, res) {
         } else if (reqData.action == 'PUSH-MOVE') {
             console.log('PUSH-MOVE')
             let table = JSON.parse(reqData.table)
-            if (!array_compare(table, pawnTable)) {
+            /* if (!array_compare(table, pawnTable)) {
                 pawnTable = table
-            }
-            console.log(pawnTable)
+            } */
+            pawnTable = table
+            findWinner()
             res.end('Move Accepted')
 
         } else {

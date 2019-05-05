@@ -43,22 +43,6 @@ class Game {
         this.selectedPawn = null
         this.PID = null
         this.pawns
-
-        /* this.myPawns = 8
-        this.enemyPawns = 8
-
-        this.myTurn = false
-        this.turnCheck = setInterval(() => {
-            console.warn('----------')
-            console.warn(game.myTurn)
-            console.log(game.myPawns)
-            console.log(localMyPawns)
-            console.log(game.enemyPawns)
-            console.log(localEnemyPawns)
-            console.warn('----------')
-
-            net.checkTableState()
-        }, 1000) */
     }
 
     draw() {
@@ -83,10 +67,10 @@ class Game {
         var grid = new Grid(2000, 200)
         scene.add(grid.getGH())
 
-        var orbitControl = new THREE.OrbitControls(camera, renderer.domElement)
+        /* var orbitControl = new THREE.OrbitControls(camera, renderer.domElement)
         orbitControl.addEventListener('change', function () {
             renderer.render(scene, camera)
-        })
+        }) */
 
         var axes = new THREE.AxesHelper(1000)
         scene.add(axes)
@@ -203,8 +187,8 @@ class Game {
         game.myPawns = 8
         game.enemyPawns = 8
 
-        game.turnCheck = setInterval(() => {
-            net.checkTableState()
+        game.turnCheck = setInterval(async () => {
+            net.checkWin()
         }, 1000)
     }
 

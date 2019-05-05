@@ -47,6 +47,7 @@ class Ui {
 
     resolveChallenge(numOfPlayers) {
         if (parseInt(numOfPlayers) == 2) {
+            $('#await-dialog').css('display', 'none')
             $('#lock-container').css('display', 'none')
             clearInterval(this.challengeInterval)
 
@@ -54,4 +55,10 @@ class Ui {
         }
     }
 
+    resolveWin(msg) {
+        $('#win-dialog').removeAttr('style')
+        $('#lock-container').removeAttr('style')
+
+        $('#win-dialog-header').html(msg)
+    }
 }

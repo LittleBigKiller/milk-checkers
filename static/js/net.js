@@ -58,6 +58,33 @@ class Net {
         })
     }
 
+    checkWin() {
+        /* console.log('checkTableState') */
+        $.ajax({
+            data: {
+                action: 'CHECK-WIN',
+            },
+            type: 'POST',
+            success: function (data) {
+                console.log('winner: ' + data)
+                if (data != -1) {
+                    if (data == game.PID)
+                        ui.resolveWin('Wygrałeś!')
+                    else {
+                        net.checkTableState()
+                        ui.resolveWin('Przegrałeś!')
+                    }
+                } else {
+                    net.checkTableState()
+                }
+            },
+            error: function (xhr, status, error) {
+                console.log(error)
+                console.log(xhr)
+            },
+        })
+    }
+
     checkTableState() {
         /* console.log('checkTableState') */
         $.ajax({
