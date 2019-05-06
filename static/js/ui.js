@@ -61,4 +61,13 @@ class Ui {
 
         $('#win-dialog-header').html(msg)
     }
+
+    turnLock(lock) {
+        console.log('turnLock: ' + lock)
+        if (lock) {
+            $('#lock-container').removeAttr('style')
+        } else {
+            $('#lock-container').css('display', 'none')
+        }
+    }
 }

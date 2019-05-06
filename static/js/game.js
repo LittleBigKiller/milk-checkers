@@ -96,12 +96,6 @@ class Game {
             if (inter.length > 0) {
                 let obj = inter[0].object
 
-                console.warn('----------')
-                console.warn(game.myTurn)
-                console.log(game.myPawns)
-                console.log(game.enemyPawns)
-                console.warn('----------')
-
                 if (obj.name == 'PawnRed' && game.PID == 0 && game.myTurn) {
                     for (let i in game.pawns.children) {
                         if (game.pawns.children[i] != obj)
@@ -141,9 +135,16 @@ class Game {
                         game.pawnData[pawnX][pawnZ] = 0
 
                         if (game.PID == 1)
-                            game.pawnData[targetX][targetZ] = 1
+                            if (targetX == 0 || game.selectedPawn.isKing)
+                                game.pawnData[targetX][targetZ] = 3
+                            else
+                                game.pawnData[targetX][targetZ] = 1
                         else if (game.PID == 0)
-                            game.pawnData[targetX][targetZ] = 2
+                            if (targetX == 7 || game.selectedPawn.isKing)
+                                game.pawnData[targetX][targetZ] = 4
+                            else
+                                game.pawnData[targetX][targetZ] = 2
+
 
                         game.selectedPawn.lowlight()
                         game.selectedPawn = null
@@ -151,7 +152,7 @@ class Game {
                         game.preserveMove = false
                         game.myTurn = false
 
-                        if (Math.abs(targetZ - pawnZ) == 2) {
+                        if (Math.abs(targetZ - pawnZ) == 2) { // Nie działa z królówkami
                             game.pawnData[pawnX + parseInt(targetX - pawnX) / 2][pawnZ + parseInt(targetZ - pawnZ) / 2] = 0
                             game.preserveMove = true
                             game.myTurn = true
@@ -187,7 +188,7 @@ class Game {
         game.myPawns = 8
         game.enemyPawns = 8
 
-        game.turnCheck = setInterval(async () => {
+        game.turnCheck = setInterval(() => {
             net.checkWin()
         }, 1000)
     }
@@ -234,24 +235,30 @@ class Game {
         for (let i in this.boardData) {
             for (let j in this.boardData[i]) {
                 let color
-                if (this.pawnData[i][j] == 2) {
+                let isKing = false
+                if (this.pawnData[i][j] == 2 || this.pawnData[i][j] == 4) {
                     color = 0xdd3333
                     name = "PawnRed"
-                } else if (this.pawnData[i][j] == 1) {
+                    if (this.pawnData[i][j] > 2) {
+                        isKing = true
+                    }
+                } else if (this.pawnData[i][j] == 1 || this.pawnData[i][j] == 3) {
                     color = 0x33dddd
                     name = "PawnBlack"
+                    if (this.pawnData[i][j] > 2) {
+                        isKing = true
+                    }
                 } else {
                     continue
                 }
 
-                let mesh = new Pawn(color)
+                let mesh = new Pawn(color, name, isKing)
 
                 if (mesh != null) {
                     mesh.position.y += 15
 
                     mesh.position.x = -175 + (50 * i)
                     mesh.position.z = 175 + (-50 * j)
-                    mesh.name = name
                     container.add(mesh)
                 }
             }
@@ -335,10 +342,10 @@ class Game {
 
                 for (let i in game.pawnData) {
                     for (let j in game.pawnData[i]) {
-                        if (game.pawnData[i][j] == 1) {
+                        if (game.pawnData[i][j] == 1 || game.pawnData[i][j] == 3) {
                             if (game.PID == 1) localMyPawns++
                             else if (game.PID == 0) localEnemyPawns++
-                        } else if (game.pawnData[i][j] == 2) {
+                        } else if (game.pawnData[i][j] == 2 || game.pawnData[i][j] == 4) {
                             if (game.PID == 0) localMyPawns++
                             else if (game.PID == 1) localEnemyPawns++
                         }
@@ -376,53 +383,162 @@ class Game {
 
             game.spawnPawns()
         }
+
+        if (game.myTurn) {
+            ui.turnLock(false)
+        } else {
+            ui.turnLock(true)
+        }
     }
 
     createMoveTable() {
-        if (game.selectedPawn == null || !game.myTurn) {
-            console.warn('game.selectedPawn == null')
-            game.moveData = [
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-                [0, 0, 0, 0, 0, 0, 0, 0],
-            ]
-        } else {
+        game.moveData = [
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
+        ]
+        if (game.selectedPawn != null && game.myTurn) {
             let x = (game.selectedPawn.position.x + 175) / 50
             let z = (game.selectedPawn.position.z - 175) / -50
 
-            if (game.PID == 0) {
-                if (game.pawnData[x + 1][z - 1] == 0)
-                    game.moveData[x + 1][z - 1] = 1
-                else if (game.pawnData[x + 1][z - 1] == 1 && game.pawnData[x + 2][z - 2] == 0) {
-                    game.moveData[x + 1][z - 1] = 2
-                    game.moveData[x + 2][z - 2] = 1
-                }
+            if (game.selectedPawn.isKing) { //[TODO] 
+                if (game.PID == 0) {
+                    for (let i = 0; i < 7; i++) {
+                        if (game.pawnData[x + i] != undefined)
+                            if (game.pawnData[x + i][z + i] != undefined)
+                                if (game.pawnData[x + i][z + i] == 0)
+                                    game.moveData[x + i][z + i] = 1
+                                else if ((game.pawnData[x + i][z + i] == 1 || game.pawnData[x + i][z + i] == 3) && game.pawnData[x + i + 1] != undefined)
+                                    if (game.pawnData[x + i + 1][z + i + 1] != undefined)
+                                        if (game.pawnData[x + i + 1][z + i + 1] == 0) {
+                                            game.moveData[x + i][z + i] = 2
+                                            game.moveData[x + i + 1][z + i + 1] = 1
+                                        }
 
-                if (game.pawnData[x + 1][z + 1] == 0)
-                    game.moveData[x + 1][z + 1] = 1
-                else if (game.pawnData[x + 1][z + 1] == 1 && game.pawnData[x + 2][z + 2] == 0) {
-                    game.moveData[x + 1][z + 1] = 2
-                    game.moveData[x + 2][z + 2] = 1
-                }
+                        if (game.pawnData[x + i] != undefined)
+                            if (game.pawnData[x + i][z - i] != undefined)
+                                if (game.pawnData[x + i][z - i] == 0)
+                                    game.moveData[x + i][z - i] = 1
+                                else if ((game.pawnData[x + i][z - i] == 1 || game.pawnData[x + i][z - i] == 3) && game.pawnData[x + i + 1] != undefined)
+                                    if (game.pawnData[x + i + 1][z - i - 1] != undefined)
+                                        if (game.pawnData[x + i + 1][z - i - 1] == 0) {
+                                            game.moveData[x + i][z - i] = 2
+                                            game.moveData[x + i + 1][z - i - 1] = 1
+                                        }
 
-            } else if (game.PID == 1) {
-                if (game.pawnData[x - 1][z - 1] == 0)
-                    game.moveData[x - 1][z - 1] = 1
-                else if (game.pawnData[x - 1][z - 1] == 2 && game.pawnData[x - 2][z - 2] == 0) {
-                    game.moveData[x - 1][z - 1] = 2
-                    game.moveData[x - 2][z - 2] = 1
-                }
+                        if (game.pawnData[x - i] != undefined)
+                            if (game.pawnData[x - i][z + i] != undefined)
+                                if (game.pawnData[x - i][z + i] == 0)
+                                    game.moveData[x - i][z + i] = 1
+                                else if ((game.pawnData[x - i][z + i] == 1 || game.pawnData[x - i][z + i] == 3) && game.pawnData[x - i - 1] != undefined)
+                                    if (game.pawnData[x - i - 1][z + i + 1] != undefined)
+                                        if (game.pawnData[x - i - 1][z + i + 1] == 0) {
+                                            game.moveData[x - i][z + i] = 2
+                                            game.moveData[x - i - 1][z + i + 1] = 1
+                                        }
 
-                if (game.pawnData[x - 1][z + 1] == 0)
-                    game.moveData[x - 1][z + 1] = 1
-                else if (game.pawnData[x - 1][z + 1] == 2 && game.pawnData[x - 2][z + 2] == 0) {
-                    game.moveData[x - 1][z + 1] = 2
-                    game.moveData[x - 2][z + 2] = 1
+                        if (game.pawnData[x - i] != undefined)
+                            if (game.pawnData[x - i][z - i] != undefined)
+                                if (game.pawnData[x - i][z - i] == 0)
+                                    game.moveData[x - i][z - i] = 1
+                                else if ((game.pawnData[x - i][z - i] == 1 || game.pawnData[x - i][z - i] == 3) && game.pawnData[x - i - 1] != undefined)
+                                    if (game.pawnData[x - i - 1][z - i - 1] != undefined)
+                                        if (game.pawnData[x - i - 1][z - i - 1] == 0) {
+                                            game.moveData[x - i][z - i] = 2
+                                            game.moveData[x - i - 1][z - i - 1] = 1
+                                        }
+                    }
+
+                } else if (game.PID == 1) {
+                    for (let i = 0; i < 7; i++) {
+                        if (game.pawnData[x + i] != undefined)
+                            if (game.pawnData[x + i][z + i] != undefined)
+                                if (game.pawnData[x + i][z + i] == 0)
+                                    game.moveData[x + i][z + i] = 1
+                                else if ((game.pawnData[x + i][z + i] == 2 || game.pawnData[x + i][z + i] == 4) && game.pawnData[x + i + 1] != undefined)
+                                    if (game.pawnData[x + i + 1][z + i + 1] != undefined)
+                                        if (game.pawnData[x + i + 1][z + i + 1] == 0) {
+                                            game.moveData[x + i][z + i] = 2
+                                            game.moveData[x + i + 1][z + i + 1] = 1
+                                        }
+
+                        if (game.pawnData[x + i] != undefined)
+                            if (game.pawnData[x + i][z - i] != undefined)
+                                if (game.pawnData[x + i][z - i] == 0)
+                                    game.moveData[x + i][z - i] = 1
+                                else if ((game.pawnData[x + i][z - i] == 2 || game.pawnData[x + i][z - i] == 4) && game.pawnData[x + i + 1] != undefined)
+                                    if (game.pawnData[x + i + 1][z - i - 1] != undefined)
+                                        if (game.pawnData[x + i + 1][z - i - 1] == 0) {
+                                            game.moveData[x + i][z - i] = 2
+                                            game.moveData[x + i + 1][z - i - 1] = 1
+                                        }
+
+                        if (game.pawnData[x - i] != undefined)
+                            if (game.pawnData[x - i][z + i] != undefined)
+                                if (game.pawnData[x - i][z + i] == 0)
+                                    game.moveData[x - i][z + i] = 1
+                                else if ((game.pawnData[x - i][z + i] == 2 || game.pawnData[x - i][z + i] == 4) && game.pawnData[x - i - 1] != undefined)
+                                    if (game.pawnData[x - i - 1][z + i + 1] != undefined)
+                                        if (game.pawnData[x - i - 1][z + i + 1] == 0) {
+                                            game.moveData[x - i][z + i] = 2
+                                            game.moveData[x - i - 1][z + i + 1] = 1
+                                        }
+
+                        if (game.pawnData[x - i] != undefined)
+                            if (game.pawnData[x - i][z - i] != undefined)
+                                if (game.pawnData[x - i][z - i] == 0)
+                                    game.moveData[x - i][z - i] = 1
+                                else if ((game.pawnData[x - i][z - i] == 2 || game.pawnData[x - i][z - i] == 4) && game.pawnData[x - i - 1] != undefined)
+                                    if (game.pawnData[x - i - 1][z - i - 1] != undefined)
+                                        if (game.pawnData[x - i - 1][z - i - 1] == 0) {
+                                            game.moveData[x - i][z - i] = 2
+                                            game.moveData[x - i - 1][z - i - 1] = 1
+                                        }
+                    }
+                }
+            } else {
+                if (game.PID == 0) {
+                    if (game.pawnData[x + 1][z - 1] == 0)
+                        game.moveData[x + 1][z - 1] = 1
+                    else if (game.pawnData[x + 1][z - 1] == 1 && game.pawnData[x + 2] != undefined)
+                        if (game.pawnData[x + 2][z - 2] != undefined)
+                            if (game.pawnData[x + 2][z - 2] == 0) {
+                                game.moveData[x + 1][z - 1] = 2
+                                game.moveData[x + 2][z - 2] = 1
+                            }
+
+                    if (game.pawnData[x + 1][z + 1] == 0)
+                        game.moveData[x + 1][z + 1] = 1
+                    else if (game.pawnData[x + 1][z + 1] == 1 && game.pawnData[x + 2] != undefined)
+                        if (game.pawnData[x + 2][z + 2] != undefined)
+                            if (game.pawnData[x + 2][z + 2] == 0) {
+                                game.moveData[x + 1][z + 1] = 2
+                                game.moveData[x + 2][z + 2] = 1
+                            }
+
+                } else if (game.PID == 1) {
+                    if (game.pawnData[x - 1][z - 1] == 0)
+                        game.moveData[x - 1][z - 1] = 1
+                    else if (game.pawnData[x - 1][z - 1] == 2 && game.pawnData[x - 2] != undefined)
+                        if (game.pawnData[x - 2][z - 2] != undefined)
+                            if (game.pawnData[x - 2][z - 2] == 0) {
+                                game.moveData[x - 1][z - 1] = 2
+                                game.moveData[x - 2][z - 2] = 1
+                            }
+
+                    if (game.pawnData[x - 1][z + 1] == 0)
+                        game.moveData[x - 1][z + 1] = 1
+                    else if (game.pawnData[x - 1][z + 1] == 2 && game.pawnData[x - 2] != undefined)
+                        if (game.pawnData[x - 2][z + 2] != undefined)
+                            if (game.pawnData[x - 2][z + 2] == 0) {
+                                game.moveData[x - 1][z + 1] = 2
+                                game.moveData[x - 2][z + 2] = 1
+                            }
                 }
             }
         }

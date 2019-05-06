@@ -39,9 +39,9 @@ function findWinner() {
 
     for (let i in pawnTable) {
         for (let j in pawnTable[i]) {
-            if (pawnTable[i][j] == 1) {
+            if (pawnTable[i][j] == 1 || pawnTable[i][j] == 3) {
                 p1Pawns += 1
-            } else if (pawnTable[i][j] == 2) {
+            } else if (pawnTable[i][j] == 2 || pawnTable[i][j] == 4) {
                 p0Pawns += 1
             }
         }
