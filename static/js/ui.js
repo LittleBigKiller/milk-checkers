@@ -63,7 +63,6 @@ class Ui {
     }
 
     turnLock(lock) {
-        console.log('turnLock: ' + lock)
         if (lock) {
             $('#lock-container').removeAttr('style')
         } else {

@@ -23,7 +23,6 @@ class Pawn extends THREE.Mesh {
     highlight() {
         this.material.color.setHex(0xdddd33)
         this.highlighted = true
-        console.warn(this.isKing)
     }
 
     lowlight() {

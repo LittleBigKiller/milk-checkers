@@ -66,7 +66,6 @@ class Net {
             },
             type: 'POST',
             success: function (data) {
-                console.log('winner: ' + data)
                 if (data != -1) {
                     if (data == game.PID)
                         ui.resolveWin('Wygrałeś!')
