@@ -43,6 +43,8 @@ class Game {
         this.selectedPawn = null
         this.PID = null
         this.pawns
+
+        this.gameFinished = false
     }
 
     draw() {
@@ -122,86 +124,112 @@ class Game {
                         obj.highlight()
                         game.selectedPawn = obj
                     }
-                } else if (obj.name == 'Board' && game.myTurn) {
-                    if (game.selectedPawn != null) {
-                        let targetX = (obj.position.x + 175) / 50
-                        let targetZ = (obj.position.z - 175) / -50
-                        let pawnX = (game.selectedPawn.position.x + 175) / 50
-                        let pawnZ = (game.selectedPawn.position.z - 175) / -50
+                } else if (obj.name == 'Board' && game.myTurn && game.selectedPawn != null) {
+                    let targetX = (obj.position.x + 175) / 50
+                    let targetZ = (obj.position.z - 175) / -50
+                    let pawnX = (game.selectedPawn.position.x + 175) / 50
+                    let pawnZ = (game.selectedPawn.position.z - 175) / -50
 
-                        game.selectedPawn.position.z = obj.position.z
-                        game.selectedPawn.position.x = obj.position.x
+                    game.pawnData[pawnX][pawnZ] = 0
 
-                        game.pawnData[pawnX][pawnZ] = 0
-
-                        if (game.PID == 1)
-                            if (targetX == 0 || game.selectedPawn.isKing)
-                                game.pawnData[targetX][targetZ] = 3
-                            else
-                                game.pawnData[targetX][targetZ] = 1
-                        else if (game.PID == 0)
-                            if (targetX == 7 || game.selectedPawn.isKing)
-                                game.pawnData[targetX][targetZ] = 4
-                            else
-                                game.pawnData[targetX][targetZ] = 2
+                    if (game.PID == 1)
+                        if (targetX == 0 || game.selectedPawn.isKing)
+                            game.pawnData[targetX][targetZ] = 3
+                        else
+                            game.pawnData[targetX][targetZ] = 1
+                    else if (game.PID == 0)
+                        if (targetX == 7 || game.selectedPawn.isKing)
+                            game.pawnData[targetX][targetZ] = 4
+                        else
+                            game.pawnData[targetX][targetZ] = 2
 
 
-                        game.selectedPawn.lowlight()
-                        game.selectedPawn = null
+                    game.selectedPawn.lowlight()
+                    game.selectedPawn = null
 
-                        game.preserveMove = false
-                        game.myTurn = false
+                    game.preserveMove = false
+                    game.myTurn = false
 
-                        if (Math.abs(targetZ - pawnZ) == 2) {
-                            game.pawnData[pawnX + parseInt(targetX - pawnX) / 2][pawnZ + parseInt(targetZ - pawnZ) / 2] = 0
-                            /* game.preserveMove = true // [TODO] Chwilowo musi zostać...
-                            game.myTurn = true // [TODO] Chwilowo musi zostać... */
-                        } else if (Math.abs(targetZ - pawnZ) > 2) {
-                            if (targetZ - pawnZ < 0) {
-                                if (targetX - pawnX < 0) {
-                                    let x = pawnX
-                                    let z = pawnZ
-                                    while (x > targetX && z > targetZ) {
-                                        game.pawnData[x][z] = 0
-                                        x--
-                                        z--
-                                    }
-                                } else {
-                                    let x = pawnX
-                                    let z = pawnZ
-                                    while (x < targetX && z > targetZ) {
-                                        game.pawnData[x][z] = 0
-                                        x++
-                                        z--
-                                    }
+                    game.spawnPawns()
+                    net.pushMove(game.pawnData)
+                } else if (obj.name == 'Board-Capture' && game.myTurn && game.selectedPawn != null) {
+                    let targetX = (obj.position.x + 175) / 50
+                    let targetZ = (obj.position.z - 175) / -50
+                    let pawnX = (game.selectedPawn.position.x + 175) / 50
+                    let pawnZ = (game.selectedPawn.position.z - 175) / -50
+
+                    game.selectedPawn.position.z = obj.position.z
+                    game.selectedPawn.position.x = obj.position.x
+
+                    game.pawnData[pawnX][pawnZ] = 0
+
+                    if (game.PID == 1)
+                        if (targetX == 0 || game.selectedPawn.isKing)
+                            game.pawnData[targetX][targetZ] = 3
+                        else
+                            game.pawnData[targetX][targetZ] = 1
+                    else if (game.PID == 0)
+                        if (targetX == 7 || game.selectedPawn.isKing)
+                            game.pawnData[targetX][targetZ] = 4
+                        else
+                            game.pawnData[targetX][targetZ] = 2
+
+
+                    game.selectedPawn.lowlight()
+                    game.selectedPawn = null
+
+                    game.preserveMove = false
+                    game.myTurn = false
+
+                    if (Math.abs(targetZ - pawnZ) == 2) {
+                        game.pawnData[pawnX + parseInt(targetX - pawnX) / 2][pawnZ + parseInt(targetZ - pawnZ) / 2] = 0
+                        /* game.preserveMove = true // [TODO] Chwilowo musi zostać...
+                        game.myTurn = true // [TODO] Chwilowo musi zostać... */
+                    } else if (Math.abs(targetZ - pawnZ) > 2) {
+                        if (targetZ - pawnZ < 0) {
+                            if (targetX - pawnX < 0) {
+                                let x = pawnX
+                                let z = pawnZ
+                                while (x > targetX && z > targetZ) {
+                                    game.pawnData[x][z] = 0
+                                    x--
+                                    z--
                                 }
-
                             } else {
-                                if (targetX - pawnX < 0) {
-                                    let x = pawnX
-                                    let z = pawnZ
-                                    while (x > targetX && z < targetZ) {
-                                        game.pawnData[x][z] = 0
-                                        x--
-                                        z++
-                                    }
-                                } else {
-                                    let x = pawnX
-                                    let z = pawnZ
-                                    while (x < targetX && z < targetZ) {
-                                        game.pawnData[x][z] = 0
-                                        x++
-                                        z++
-                                    }
+                                let x = pawnX
+                                let z = pawnZ
+                                while (x < targetX && z > targetZ) {
+                                    game.pawnData[x][z] = 0
+                                    x++
+                                    z--
                                 }
                             }
-                            /* game.preserveMove = true // [TODO] Chwilowo musi zostać...
-                            game.myTurn = true // [TODO] Chwilowo musi zostać... */
-                        }
 
-                        game.spawnPawns()
-                        net.pushMove(game.pawnData)
+                        } else {
+                            if (targetX - pawnX < 0) {
+                                let x = pawnX
+                                let z = pawnZ
+                                while (x > targetX && z < targetZ) {
+                                    game.pawnData[x][z] = 0
+                                    x--
+                                    z++
+                                }
+                            } else {
+                                let x = pawnX
+                                let z = pawnZ
+                                while (x < targetX && z < targetZ) {
+                                    game.pawnData[x][z] = 0
+                                    x++
+                                    z++
+                                }
+                            }
+                        }
+                        /* game.preserveMove = true // [TODO] Chwilowo musi zostać...
+                        game.myTurn = true // [TODO] Chwilowo musi zostać... */
                     }
+
+                    game.spawnPawns()
+                    net.pushMove(game.pawnData)
                 }
 
                 game.createMoveTable()
@@ -230,14 +258,15 @@ class Game {
         game.enemyPawns = 8
 
         game.turnCheck = setInterval(() => {
-            net.checkWin()
-        }, 1000)
+            if (!game.myTurn)
+                net.checkWin()
+        }, 250)
 
-        if (game.myTurn) {
-            ui.turnLock(false)
-        } else {
-            ui.turnLock(true)
+        if (game.PID == 0) {
+            game.myTurn = true
         }
+
+        ui.turnLock(!game.myTurn)
     }
 
     createLevel() {
@@ -258,7 +287,9 @@ class Game {
                         name = 'Board'
                     } else if (this.moveData[i][j] == 2) {
                         mat.color.setHex(0xdd3333)
-                        name = 'Board'
+                    } else if (this.moveData[i][j] == 3) {
+                        mat.color.setHex(0xdddd33)
+                        name = 'Board-Capture'
                     } else {
                         mat.color.setHex(0x333333)
                     }
@@ -386,32 +417,52 @@ class Game {
             /* game.moveChecker() */
             game.myTurn = true
 
+            if (game.countMyPawns() == 0) {
+                game.myTurn = false
+            }
+
             game.spawnPawns()
         }
 
-        if (game.myTurn) {
-            ui.turnLock(false)
-        } else {
-            ui.turnLock(true)
+        ui.turnLock(!game.myTurn)
+    }
+
+    countMyPawns() {
+        let localMyPawns = 0
+
+        for (let i in game.pawnData) {
+            for (let j in game.pawnData[i]) {
+                if (game.pawnData[i][j] == 1 || game.pawnData[i][j] == 3) {
+                    if (game.PID == 1) localMyPawns++
+                } else if (game.pawnData[i][j] == 2 || game.pawnData[i][j] == 4) {
+                    if (game.PID == 0) localMyPawns++
+                }
+            }
         }
+
+        return localMyPawns
+    }
+
+    countEnemyPawns() {
+        let localEnemyPawns = 0
+
+        for (let i in game.pawnData) {
+            for (let j in game.pawnData[i]) {
+                if (game.pawnData[i][j] == 1 || game.pawnData[i][j] == 3) {
+                    if (game.PID == 0) localEnemyPawns++
+                } else if (game.pawnData[i][j] == 2 || game.pawnData[i][j] == 4) {
+                    if (game.PID == 1) localEnemyPawns++
+                }
+            }
+        }
+
+        return localEnemyPawns
     }
 
     moveChecker() { // [TODO] Tymczasowo wycofany
         if (!game.preserveMove) {
-            let localMyPawns = 0
-            let localEnemyPawns = 0
-
-            for (let i in game.pawnData) {
-                for (let j in game.pawnData[i]) {
-                    if (game.pawnData[i][j] == 1 || game.pawnData[i][j] == 3) {
-                        if (game.PID == 1) localMyPawns++
-                        else if (game.PID == 0) localEnemyPawns++
-                    } else if (game.pawnData[i][j] == 2 || game.pawnData[i][j] == 4) {
-                        if (game.PID == 0) localMyPawns++
-                        else if (game.PID == 1) localEnemyPawns++
-                    }
-                }
-            }
+            let localMyPawns = game.countMyPawns()
+            let localEnemyPawns = game.countEnemyPawns()
 
             console.error('Move Check')
             console.log('game.myTurn: ' + game.myTurn)
@@ -463,16 +514,19 @@ class Game {
                 if (game.PID == 0) {
 
                     let canCapture = true
-                    for (let i = 1; i < 7; i++) {
+                    for (let i = 1; i < 8; i++) {
                         if (game.pawnData[x + i] != undefined)
                             if (game.pawnData[x + i][z + i] != undefined)
                                 if (game.pawnData[x + i][z + i] == 0)
-                                    game.moveData[x + i][z + i] = 1
+                                    if (canCapture)
+                                        game.moveData[x + i][z + i] = 1
+                                    else
+                                        game.moveData[x + i][z + i] = 3
                                 else if ((game.pawnData[x + i][z + i] == 1 || game.pawnData[x + i][z + i] == 3) && game.pawnData[x + i + 1] != undefined && canCapture) {
                                     if (game.pawnData[x + i + 1][z + i + 1] != undefined)
                                         if (game.pawnData[x + i + 1][z + i + 1] == 0) {
                                             game.moveData[x + i][z + i] = 2
-                                            game.moveData[x + i + 1][z + i + 1] = 1
+                                            game.moveData[x + i + 1][z + i + 1] = 3
                                             canCapture = false
                                         } else {
                                             break
@@ -483,16 +537,19 @@ class Game {
                     }
 
                     canCapture = true
-                    for (let i = 1; i < 7; i++) {
+                    for (let i = 1; i < 8; i++) {
                         if (game.pawnData[x + i] != undefined)
                             if (game.pawnData[x + i][z - i] != undefined)
                                 if (game.pawnData[x + i][z - i] == 0)
-                                    game.moveData[x + i][z - i] = 1
+                                    if (canCapture)
+                                        game.moveData[x + i][z - i] = 1
+                                    else
+                                        game.moveData[x + i][z - i] = 3
                                 else if ((game.pawnData[x + i][z - i] == 1 || game.pawnData[x + i][z - i] == 3) && game.pawnData[x + i + 1] != undefined && canCapture) {
                                     if (game.pawnData[x + i + 1][z - i - 1] != undefined)
                                         if (game.pawnData[x + i + 1][z - i - 1] == 0) {
                                             game.moveData[x + i][z - i] = 2
-                                            game.moveData[x + i + 1][z - i - 1] = 1
+                                            game.moveData[x + i + 1][z - i - 1] = 3
                                             canCapture = false
                                         } else {
                                             break
@@ -503,16 +560,19 @@ class Game {
                     }
 
                     canCapture = true
-                    for (let i = 1; i < 7; i++) {
+                    for (let i = 1; i < 8; i++) {
                         if (game.pawnData[x - i] != undefined)
                             if (game.pawnData[x - i][z + i] != undefined)
                                 if (game.pawnData[x - i][z + i] == 0)
-                                    game.moveData[x - i][z + i] = 1
+                                    if (canCapture)
+                                        game.moveData[x - i][z + i] = 1
+                                    else
+                                        game.moveData[x - i][z + i] = 3
                                 else if ((game.pawnData[x - i][z + i] == 1 || game.pawnData[x - i][z + i] == 3) && game.pawnData[x - i - 1] != undefined && canCapture) {
                                     if (game.pawnData[x - i - 1][z + i + 1] != undefined)
                                         if (game.pawnData[x - i - 1][z + i + 1] == 0) {
                                             game.moveData[x - i][z + i] = 2
-                                            game.moveData[x - i - 1][z + i + 1] = 1
+                                            game.moveData[x - i - 1][z + i + 1] = 3
                                             canCapture = false
                                         } else {
                                             break
@@ -523,16 +583,19 @@ class Game {
                     }
 
                     canCapture = true
-                    for (let i = 1; i < 7; i++) {
+                    for (let i = 1; i < 8; i++) {
                         if (game.pawnData[x - i] != undefined)
                             if (game.pawnData[x - i][z - i] != undefined)
                                 if (game.pawnData[x - i][z - i] == 0)
-                                    game.moveData[x - i][z - i] = 1
+                                    if (canCapture)
+                                        game.moveData[x - i][z - i] = 1
+                                    else
+                                        game.moveData[x - i][z - i] = 3
                                 else if ((game.pawnData[x - i][z - i] == 1 || game.pawnData[x - i][z - i] == 3) && game.pawnData[x - i - 1] != undefined && canCapture) {
                                     if (game.pawnData[x - i - 1][z - i - 1] != undefined)
                                         if (game.pawnData[x - i - 1][z - i - 1] == 0) {
                                             game.moveData[x - i][z - i] = 2
-                                            game.moveData[x - i - 1][z - i - 1] = 1
+                                            game.moveData[x - i - 1][z - i - 1] = 3
                                             canCapture = false
                                         } else {
                                             break
@@ -545,16 +608,19 @@ class Game {
                 } else if (game.PID == 1) {
 
                     let canCapture = true
-                    for (let i = 1; i < 7; i++) {
+                    for (let i = 1; i < 8; i++) {
                         if (game.pawnData[x + i] != undefined)
                             if (game.pawnData[x + i][z + i] != undefined)
                                 if (game.pawnData[x + i][z + i] == 0)
-                                    game.moveData[x + i][z + i] = 1
+                                    if (canCapture)
+                                        game.moveData[x + i][z + i] = 1
+                                    else
+                                        game.moveData[x + i][z + i] = 3
                                 else if ((game.pawnData[x + i][z + i] == 2 || game.pawnData[x + i][z + i] == 4) && game.pawnData[x + i + 1] != undefined && canCapture) {
                                     if (game.pawnData[x + i + 1][z + i + 1] != undefined)
                                         if (game.pawnData[x + i + 1][z + i + 1] == 0) {
                                             game.moveData[x + i][z + i] = 2
-                                            game.moveData[x + i + 1][z + i + 1] = 1
+                                            game.moveData[x + i + 1][z + i + 1] = 3
                                             canCapture = false
                                         } else {
                                             break
@@ -565,16 +631,19 @@ class Game {
                     }
 
                     canCapture = true
-                    for (let i = 1; i < 7; i++) {
+                    for (let i = 1; i < 8; i++) {
                         if (game.pawnData[x + i] != undefined)
                             if (game.pawnData[x + i][z - i] != undefined)
                                 if (game.pawnData[x + i][z - i] == 0)
-                                    game.moveData[x + i][z - i] = 1
+                                    if (canCapture)
+                                        game.moveData[x + i][z - i] = 1
+                                    else
+                                        game.moveData[x + i][z - i] = 3
                                 else if ((game.pawnData[x + i][z - i] == 2 || game.pawnData[x + i][z - i] == 4) && game.pawnData[x + i + 1] != undefined && canCapture) {
                                     if (game.pawnData[x + i + 1][z - i - 1] != undefined)
                                         if (game.pawnData[x + i + 1][z - i - 1] == 0) {
                                             game.moveData[x + i][z - i] = 2
-                                            game.moveData[x + i + 1][z - i - 1] = 1
+                                            game.moveData[x + i + 1][z - i - 1] = 3
                                             canCapture = false
                                         } else {
                                             break
@@ -585,16 +654,19 @@ class Game {
                     }
 
                     canCapture = true
-                    for (let i = 1; i < 7; i++) {
+                    for (let i = 1; i < 8; i++) {
                         if (game.pawnData[x - i] != undefined)
                             if (game.pawnData[x - i][z + i] != undefined)
                                 if (game.pawnData[x - i][z + i] == 0)
-                                    game.moveData[x - i][z + i] = 1
+                                    if (canCapture)
+                                        game.moveData[x - i][z + i] = 1
+                                    else
+                                        game.moveData[x - i][z + i] = 3
                                 else if ((game.pawnData[x - i][z + i] == 2 || game.pawnData[x - i][z + i] == 4) && game.pawnData[x - i - 1] != undefined && canCapture) {
                                     if (game.pawnData[x - i - 1][z + i + 1] != undefined)
                                         if (game.pawnData[x - i - 1][z + i + 1] == 0) {
                                             game.moveData[x - i][z + i] = 2
-                                            game.moveData[x - i - 1][z + i + 1] = 1
+                                            game.moveData[x - i - 1][z + i + 1] = 3
                                             canCapture = false
                                         } else {
                                             break
@@ -605,16 +677,19 @@ class Game {
                     }
 
                     canCapture = true
-                    for (let i = 1; i < 7; i++) {
+                    for (let i = 1; i < 8; i++) {
                         if (game.pawnData[x - i] != undefined)
                             if (game.pawnData[x - i][z - i] != undefined)
                                 if (game.pawnData[x - i][z - i] == 0)
-                                    game.moveData[x - i][z - i] = 1
+                                    if (canCapture)
+                                        game.moveData[x - i][z - i] = 1
+                                    else
+                                        game.moveData[x - i][z - i] = 3
                                 else if ((game.pawnData[x - i][z - i] == 2 || game.pawnData[x - i][z - i] == 4) && game.pawnData[x - i - 1] != undefined && canCapture) {
                                     if (game.pawnData[x - i - 1][z - i - 1] != undefined)
                                         if (game.pawnData[x - i - 1][z - i - 1] == 0) {
                                             game.moveData[x - i][z - i] = 2
-                                            game.moveData[x - i - 1][z - i - 1] = 1
+                                            game.moveData[x - i - 1][z - i - 1] = 3
                                             canCapture = false
                                         } else {
                                             break
@@ -628,11 +703,11 @@ class Game {
                 if (game.PID == 0) {
                     if (game.pawnData[x + 1][z - 1] == 0)
                         game.moveData[x + 1][z - 1] = 1
-                    else if ( (game.pawnData[x + 1][z - 1] == 1 || game.pawnData[x + 1][z - 1] == 3) && game.pawnData[x + 2] != undefined)
+                    else if ((game.pawnData[x + 1][z - 1] == 1 || game.pawnData[x + 1][z - 1] == 3) && game.pawnData[x + 2] != undefined)
                         if (game.pawnData[x + 2][z - 2] != undefined)
                             if (game.pawnData[x + 2][z - 2] == 0) {
                                 game.moveData[x + 1][z - 1] = 2
-                                game.moveData[x + 2][z - 2] = 1
+                                game.moveData[x + 2][z - 2] = 3
                             }
 
                     if (game.pawnData[x + 1][z + 1] == 0)
@@ -641,7 +716,7 @@ class Game {
                         if (game.pawnData[x + 2][z + 2] != undefined)
                             if (game.pawnData[x + 2][z + 2] == 0) {
                                 game.moveData[x + 1][z + 1] = 2
-                                game.moveData[x + 2][z + 2] = 1
+                                game.moveData[x + 2][z + 2] = 3
                             }
 
                 } else if (game.PID == 1) {
@@ -651,7 +726,7 @@ class Game {
                         if (game.pawnData[x - 2][z - 2] != undefined)
                             if (game.pawnData[x - 2][z - 2] == 0) {
                                 game.moveData[x - 1][z - 1] = 2
-                                game.moveData[x - 2][z - 2] = 1
+                                game.moveData[x - 2][z - 2] = 3
                             }
 
                     if (game.pawnData[x - 1][z + 1] == 0)
@@ -660,7 +735,7 @@ class Game {
                         if (game.pawnData[x - 2][z + 2] != undefined)
                             if (game.pawnData[x - 2][z + 2] == 0) {
                                 game.moveData[x - 1][z + 1] = 2
-                                game.moveData[x - 2][z + 2] = 1
+                                game.moveData[x - 2][z + 2] = 3
                             }
                 }
             }

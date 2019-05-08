@@ -67,9 +67,11 @@ class Net {
             type: 'POST',
             success: function (data) {
                 if (data != -1) {
+                    game.gameFinished = true
                     if (data == game.PID)
                         ui.resolveWin('Wygrałeś!')
                     else {
+                        game.gameFinished = true
                         net.checkTableState()
                         ui.resolveWin('Przegrałeś!')
                     }

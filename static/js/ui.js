@@ -13,29 +13,27 @@ class Ui {
     loginHandler() {
         ui.username = $('#login-dialog-input').val()
         net.login()
-        net.checkTableState()
     }
 
     resetHandler() {
         net.flushUserTable()
-        net.checkTableState()
     }
 
     updateHeader(res) {
-        switch(res) {
+        switch (res) {
             case 'USER_ADDED':
                 $('#header').html(res + '<br>Witaj <b>' + ui.username + '</b>!')
                 this.awaitChallenge()
-            break
+                break
             case 'NAME_TAKEN':
                 $('#header').html(res + '<br>Nazwa <b>' + ui.username + '</b> jest zajęta')
-            break
+                break
             case 'GAME_FULL':
                 $('#header').html(res + '<br>W grze jest już dwóch graczy')
-            break
+                break
             default:
                 $('#header').html(res + '<br>¯\\_(ツ)_/¯')
-            break
+                break
         }
     }
 
@@ -56,6 +54,7 @@ class Ui {
     }
 
     resolveWin(msg) {
+        game.gameFinished = true
         $('#win-dialog').removeAttr('style')
         $('#lock-container').removeAttr('style')
 
@@ -63,7 +62,7 @@ class Ui {
     }
 
     turnLock(lock) {
-        if (lock) {
+        if (lock || game.gameFinished) {
             $('#lock-container').removeAttr('style')
         } else {
             $('#lock-container').css('display', 'none')
