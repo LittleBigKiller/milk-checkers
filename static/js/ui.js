@@ -47,6 +47,7 @@ class Ui {
         if (parseInt(numOfPlayers) == 2) {
             $('#await-dialog').css('display', 'none')
             $('#lock-container').css('display', 'none')
+            $('#turn-dialog').css('display', 'none')
             clearInterval(this.challengeInterval)
 
             game.init()
@@ -55,6 +56,7 @@ class Ui {
 
     resolveWin(msg) {
         game.gameFinished = true
+        $('#turn-dialog').css('display', 'none')
         $('#win-dialog').removeAttr('style')
         $('#lock-container').removeAttr('style')
 
@@ -64,8 +66,10 @@ class Ui {
     turnLock(lock) {
         if (lock || game.gameFinished) {
             $('#lock-container').removeAttr('style')
+            $('#turn-dialog').removeAttr('style')
         } else {
             $('#lock-container').css('display', 'none')
+            $('#turn-dialog').css('display', 'none')
         }
     }
 }

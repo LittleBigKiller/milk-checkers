@@ -121,7 +121,7 @@ button:active {
     font-size: 3em;
 }
 
-#await-dialog, #win-dialog {
+#await-dialog, #win-dialog, #turn-dialog {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -133,11 +133,11 @@ button:active {
     border-radius: 50px;
 }
 
-#win-dialog {
+#win-dialog, #turn-dialog {
     height: 120px;
 }
 
-#await-dialog-header, #win-dialog-header {
+#await-dialog-header, #win-dialog-header, #turn-dialog-header {
     font-size: 4em;
     color: #88dd33;
     text-align: center;
