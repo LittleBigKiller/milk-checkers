@@ -60,6 +60,9 @@ class Game {
 
         var renderer = new THREE.WebGLRenderer({ antialias: true })
         renderer.setClearColor(0xAAAAAA)
+        new THREE.TextureLoader().load('textures/background.jpg', function (texture) {
+            scene.background = texture
+        })
         renderer.setSize(winWidth, winHeight)
 
         $("#root").append(renderer.domElement)
@@ -67,8 +70,8 @@ class Game {
         this.camera.position.set(0, 500, -500)
         camera.lookAt(scene.position)
 
-        var grid = new Grid(2000, 200)
-        scene.add(grid.getGH())
+        /* var grid = new Grid(2000, 200)
+        scene.add(grid.getGH()) */
 
         /* var orbitControl = new THREE.OrbitControls(camera, renderer.domElement)
         orbitControl.addEventListener('change', function () {

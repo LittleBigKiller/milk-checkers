@@ -102,6 +102,12 @@ function getResponse(req, res) {
             res.write(data)
             res.end()
         })
+    } else if (req.url.indexOf('.jpg') != -1) {
+        fs.readFile(__dirname + '/static/' + decodeURI(req.url), function (error, data) {
+            res.writeHead(200, { 'Content-type': 'image/jpg; charset=utf-8' })
+            res.write(data)
+            res.end()
+        })
     } else {
         fs.readFile(__dirname + '/static/index.html', function (error, data) {
             res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
