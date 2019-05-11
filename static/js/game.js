@@ -75,8 +75,8 @@ class Game {
             renderer.render(scene, camera)
         }) */
 
-        var axes = new THREE.AxesHelper(1000)
-        scene.add(axes)
+        /* var axes = new THREE.AxesHelper(1000)
+        scene.add(axes) */
 
         this.boardTexture = new THREE.TextureLoader().load('textures/wood1.png')
         this.pawnTexture = new THREE.TextureLoader().load('textures/wood1.png')
@@ -320,9 +320,9 @@ class Game {
                         mat.color.setHex(0x33dd88)
                         name = 'Board'
                     } else if (this.moveData[i][j] == 2) {
-                        mat.color.setHex(0xdd3333)
+                        mat.color.setHex(0xdd33dd)
                     } else if (this.moveData[i][j] == 3) {
-                        mat.color.setHex(0xdddd33)
+                        mat.color.setHex(0xdd8833)
                         name = 'Board-Capture'
                     } else {
                         mat.color.setHex(0x333333)
