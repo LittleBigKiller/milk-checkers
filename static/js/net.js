@@ -91,11 +91,14 @@ class Net {
         $.ajax({
             data: {
                 action: 'CHECK-TABLE-STATE',
+                pid: game.PID
             },
             type: 'POST',
             success: function (data) {
                 /* console.log(JSON.parse(data)) */
-                game.resolveTableState(JSON.parse(data))
+                let read = JSON.parse(data)
+                console.warn(read)
+                game.resolveTableState(read.table, read.giveMove) // read.giveMove == undefined?
             },
             error: function (xhr, status, error) {
                 console.log(error)
@@ -104,12 +107,32 @@ class Net {
         })
     }
 
-    pushMove(gameTable) {
+    pushMove(gameTable, move) {
         /* console.log('pushMove') */
         $.ajax({
             data: {
                 action: 'PUSH-MOVE',
                 table: JSON.stringify(gameTable),
+                giveMove: move,
+                pid: game.PID
+            },
+            type: 'POST',
+            success: function (data) {
+                /* console.log(data) */
+            },
+            error: function (xhr, status, error) {
+                console.log(error)
+                console.log(xhr)
+            },
+        })
+    }
+
+    acceptTurn() {
+        $.ajax({
+            data: {
+                action: 'ACCEPT-TURN',
+                table: JSON.stringify(gameTable),
+                giveMove: move
             },
             type: 'POST',
             success: function (data) {

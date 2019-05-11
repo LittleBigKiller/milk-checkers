@@ -45,6 +45,7 @@ class Game {
         this.pawns
 
         this.gameFinished = false
+        this.forcedMove = false
     }
 
     draw() {
@@ -98,7 +99,7 @@ class Game {
             if (inter.length > 0) {
                 let obj = inter[0].object
 
-                if (obj.name == 'PawnRed' && game.PID == 0 && game.myTurn) {
+                if (obj.name == 'PawnRed' && game.PID == 0 && game.myTurn && !game.forcedMove) {
                     for (let i in game.pawns.children) {
                         if (game.pawns.children[i] != obj)
                             game.pawns.children[i].lowlight()
@@ -111,7 +112,7 @@ class Game {
                         obj.highlight()
                         game.selectedPawn = obj
                     }
-                } else if (obj.name == 'PawnBlack' && game.PID == 1 && game.myTurn) {
+                } else if (obj.name == 'PawnBlack' && game.PID == 1 && game.myTurn && !game.forcedMove) {
                     for (let i in game.pawns.children) {
                         if (game.pawns.children[i] != obj)
                             game.pawns.children[i].lowlight()
@@ -124,7 +125,7 @@ class Game {
                         obj.highlight()
                         game.selectedPawn = obj
                     }
-                } else if (obj.name == 'Board' && game.myTurn && game.selectedPawn != null) {
+                } else if (obj.name == 'Board' && game.myTurn && game.selectedPawn != null && !game.forcedMove) {
                     let targetX = (obj.position.x + 175) / 50
                     let targetZ = (obj.position.z - 175) / -50
                     let pawnX = (game.selectedPawn.position.x + 175) / 50
@@ -151,7 +152,7 @@ class Game {
                     game.myTurn = false
 
                     game.spawnPawns()
-                    net.pushMove(game.pawnData)
+                    net.pushMove(game.pawnData, true)
                 } else if (obj.name == 'Board-Capture' && game.myTurn && game.selectedPawn != null) {
                     let targetX = (obj.position.x + 175) / 50
                     let targetZ = (obj.position.z - 175) / -50
@@ -178,13 +179,10 @@ class Game {
                     game.selectedPawn.lowlight()
                     game.selectedPawn = null
 
-                    game.preserveMove = false
-                    game.myTurn = false
+                    game.myTurn = true
 
                     if (Math.abs(targetZ - pawnZ) == 2) {
                         game.pawnData[pawnX + parseInt(targetX - pawnX) / 2][pawnZ + parseInt(targetZ - pawnZ) / 2] = 0
-                        /* game.preserveMove = true // [TODO] Chwilowo musi zostać...
-                        game.myTurn = true // [TODO] Chwilowo musi zostać... */
                     } else if (Math.abs(targetZ - pawnZ) > 2) {
                         if (targetZ - pawnZ < 0) {
                             if (targetX - pawnX < 0) {
@@ -224,15 +222,16 @@ class Game {
                                 }
                             }
                         }
-                        /* game.preserveMove = true // [TODO] Chwilowo musi zostać...
-                        game.myTurn = true // [TODO] Chwilowo musi zostać... */
                     }
 
                     game.spawnPawns()
-                    net.pushMove(game.pawnData)
+
+                    game.myTurn = game.moveChecker(targetX, targetZ)
+
+                    net.pushMove(game.pawnData, !game.myTurn)
                 }
 
-                game.createMoveTable()
+                game.createMoveTable(true)
             }
         })
 
@@ -253,14 +252,49 @@ class Game {
         render()
     }
 
+    moveChecker(posX, posZ) {
+        for (let i in game.pawns.children) {
+            let pawn = game.pawns.children[i]
+            if (pawn.mcdata.x == posX && pawn.mcdata.z == posZ) {
+                game.selectedPawn = pawn
+
+                game.createMoveTable(false)
+
+                let nextMove = false
+                for (let i in game.moveData) {
+                    for (let j in game.moveData[i]) {
+                        if (game.moveData[i][j] == 3) {
+                            nextMove = true
+                            game.forcedMove = true
+                            pawn.highlight()
+                            break
+                        }
+                    }
+                }
+
+                if (!nextMove) {
+                    game.forcedMove = false
+                    game.selectedPawn = null
+                }
+
+                return nextMove
+            }
+        }
+    }
+
     init() {
         game.myPawns = 8
         game.enemyPawns = 8
 
-        game.turnCheck = setInterval(() => {
-            if (!game.myTurn)
-                net.checkWin()
-        }, 250)
+        console.log(Date.now())
+        setTimeout(() => {
+            console.log(Date.now())
+            game.turnCheck = setInterval(() => {
+                console.log('Interval: ' + game.myTurn)
+                if (!game.myTurn)
+                    net.checkWin()
+            }, 250)
+        }, 500)
 
         if (game.PID == 0) {
             game.myTurn = true
@@ -282,7 +316,7 @@ class Game {
                     wireframe: false
                 })
                 if (this.boardData[i][j] == 0) {
-                    if (this.moveData[i][j] == 1) {
+                    if (this.moveData[i][j] == 1 && !game.forcedMove) {
                         mat.color.setHex(0x33dd88)
                         name = 'Board'
                     } else if (this.moveData[i][j] == 2) {
@@ -337,6 +371,11 @@ class Game {
 
                     mesh.position.x = -175 + (50 * i)
                     mesh.position.z = 175 + (-50 * j)
+
+                    mesh.mcdata = {}
+                    mesh.mcdata.x = i
+                    mesh.mcdata.z = j
+
                     container.add(mesh)
                 }
             }
@@ -410,12 +449,13 @@ class Game {
         this.spawnPawns()
     }
 
-    resolveTableState(table) {
+    resolveTableState(table, giveMove) {
+        console.log(table)
+        console.log(giveMove)
         if (!game.array_compare(table, game.pawnData)) {
             game.pawnData = table
 
-            /* game.moveChecker() */
-            game.myTurn = true
+            game.myTurn = giveMove
 
             if (game.countMyPawns() == 0) {
                 game.myTurn = false
@@ -459,43 +499,7 @@ class Game {
         return localEnemyPawns
     }
 
-    moveChecker() { // [TODO] Tymczasowo wycofany
-        if (!game.preserveMove) {
-            let localMyPawns = game.countMyPawns()
-            let localEnemyPawns = game.countEnemyPawns()
-
-            console.error('Move Check')
-            console.log('game.myTurn: ' + game.myTurn)
-            console.log('localMyPawns: ' + localMyPawns)
-            console.log('game.myPawns: ' + game.myPawns)
-            console.log('localEnemyPawns: ' + localEnemyPawns)
-            console.log('game.enemyPawns: ' + game.enemyPawns)
-            if (!game.myTurn) {
-                if (game.myPawns == localMyPawns) {
-                    game.myTurn = true
-                    console.warn('0')
-                } else {
-                    game.myTurn = false
-                    game.myPawns = localMyPawns
-                    console.warn('1')
-                }
-            } else {
-                if (game.enemyPawns == localEnemyPawns) {
-                    game.myTurn = false
-                    game.enemyPawns = localEnemyPawns
-                    console.warn('2')
-                } else {
-                    game.myTurn = true
-                    console.warn('3')
-                }
-            }
-        } else {
-            game.myTurn = true
-            console.warn('Move Check bypass')
-        }
-    }
-
-    createMoveTable() {
+    createMoveTable(spawn) {
         game.moveData = [
             [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
@@ -741,7 +745,8 @@ class Game {
             }
         }
 
-        game.spawnLevel()
+        if (spawn)
+            game.spawnLevel()
     }
 
     array_compare(a1, a2) {

@@ -15,6 +15,8 @@ var pawnTable = [
     [0, 1, 0, 1, 0, 1, 0, 1],
 ]
 var winner = -1
+var giveMove = false
+var lastMove = -1
 
 function array_compare(a1, a2) {
     if (a1.length != a2.length) {
@@ -59,7 +61,7 @@ function findWinner() {
 
 
 var server = http.createServer(function (req, res) {
-    console.log(req.method + ' ' + req.url)
+    /* console.log(req.method + ' ' + req.url) */
     switch (req.method) {
         case 'GET':
             getResponse(req, res)
@@ -119,22 +121,7 @@ function postResponse(req, res) {
 
     req.on('end', function () {
         reqData = qs.parse(reqData)
-        if (reqData.action == 'FIRST') {
-            resData.albumNames = albumNames
-            resData.albumId = 0
-
-            fs.readdir(__dirname + '/static/mp3/' + albumNames[0], function (err, trackNames) {
-                if (err) return console.error(err)
-
-                resData.trackNames = trackNames
-
-                resData.trackSizes = []
-                for (let i in trackNames) {
-                    resData.trackSizes.push(fs.statSync(__dirname + '/static/mp3/' + albumNames[0] + '/' + trackNames[i]).size)
-                }
-                res.end(JSON.stringify(resData))
-            })
-        } else if (reqData.action == 'LOGIN') {
+        if (reqData.action == 'LOGIN') {
             let resData = { id: -1 }
             if (activeUsers.length == 2) {
                 resData.header = 'GAME_FULL'
@@ -155,11 +142,11 @@ function postResponse(req, res) {
                     [0, 1, 0, 1, 0, 1, 0, 1],
                 ]
             }
-            console.log(resData)
+            /* console.log(resData) */
             res.end(JSON.stringify(resData))
 
         } else if (reqData.action == 'DBG_FLUSHTABLE') {
-            console.log('DBG_FLUSHTABLE')
+            /* console.log('DBG_FLUSHTABLE') */
             activeUsers = []
             pawnTable = [
                 [2, 0, 2, 0, 2, 0, 2, 0],
@@ -172,27 +159,43 @@ function postResponse(req, res) {
                 [0, 1, 0, 1, 0, 1, 0, 1],
             ]
             winner = -1
+            giveMove = false
+            lastMove = -1
             res.end('DBG: Table flushed')
 
         } else if (reqData.action == 'WAIT-FOR-CHALLENGE') {
-            console.log('WAIT-FOR-CHALLENGE')
+            /* console.log('WAIT-FOR-CHALLENGE') */
             res.end('' + activeUsers.length)
 
         } else if (reqData.action == 'CHECK-WIN') {
-            console.log('CHECK-WIN')
+            /* console.log('CHECK-WIN') */
             res.end(JSON.stringify(winner))
 
         } else if (reqData.action == 'CHECK-TABLE-STATE') {
-            console.log('CHECK-TABLE-STATE')
-            res.end(JSON.stringify(pawnTable))
+            /* console.log('CHECK-TABLE-STATE') */
+            let resp = {
+                table: pawnTable
+            }
+            if (lastMove != reqData.pid && giveMove) {
+                resp.giveMove = true
+                giveMove = false
+            } else resp.giveMove = false
+
+            /* console.warn(resp) */
+
+            res.end(JSON.stringify(resp))
 
         } else if (reqData.action == 'PUSH-MOVE') {
-            console.log('PUSH-MOVE')
+            /* console.log('PUSH-MOVE') */
             let table = JSON.parse(reqData.table)
-            /* if (!array_compare(table, pawnTable)) {
-                pawnTable = table
-            } */
+
             pawnTable = table
+            giveMove = reqData.giveMove === 'true'
+            lastMove = reqData.pid
+
+            /* console.warn(typeof (giveMove))
+            console.warn(giveMove) */
+
             findWinner()
             res.end('Move Accepted')
 
