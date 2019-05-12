@@ -66,7 +66,8 @@ class Ui {
     turnLock(lock) {
         if (lock || game.gameFinished) {
             $('#lock-container').removeAttr('style')
-            $('#turn-dialog').removeAttr('style')
+            if (!game.gameFinished)
+                $('#turn-dialog').removeAttr('style')
         } else {
             $('#lock-container').css('display', 'none')
             $('#turn-dialog').css('display', 'none')
